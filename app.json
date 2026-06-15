@@ -34,8 +34,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sharing",
-      "expo-print",
       "expo-notifications"
     ],
     "extra": {

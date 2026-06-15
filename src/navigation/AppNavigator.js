@@ -123,9 +123,9 @@ export default function AppNavigator({ theme, isDarkMode, setIsDarkMode }) {
 //Estilos:
 const styles = StyleSheet.create({
   tabBar: {
-    height: 76,
-    paddingTop: 8,
-    paddingBottom: 10,
+    height: 110,
+    paddingTop: 4,
+    paddingBottom: 18,
     paddingHorizontal: 8,
     borderTopWidth: 1,
     elevation: 18,
