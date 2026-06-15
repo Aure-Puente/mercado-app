@@ -19,6 +19,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "06824e1c-8115-423e-82c2-0623426c2fc9"
+      }
     }
   }
 }

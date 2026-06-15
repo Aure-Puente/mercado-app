@@ -1,20 +1,26 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+//App:
+import React, { useMemo, useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import { PaperProvider } from "react-native-paper";
+import AppNavigator from "./src/navigation/AppNavigator";
+import { darkTheme, lightTheme } from "./src/theme/theme";
 
 export default function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const theme = useMemo(() => {
+    return isDarkMode ? darkTheme : lightTheme;
+  }, [isDarkMode]);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <PaperProvider theme={theme}>
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
+
+      <AppNavigator
+        theme={theme}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
+      />
+    </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
