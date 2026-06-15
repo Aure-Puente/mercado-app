@@ -1,32 +1,48 @@
 {
   "expo": {
-    "name": "mercado-app",
+    "name": "Mi Mercado",
     "slug": "mercado-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
+    "scheme": "mercadoapp",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#16A34A"
+    },
+    "notification": {
+      "icon": "./assets/adaptive-icon.png",
+      "color": "#16A34A"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.aure.mimercado",
+      "label": "Mi Mercado",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+        "backgroundColor": "#16A34A",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sharing"
+      "expo-sharing",
+      "expo-print",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {
         "projectId": "06824e1c-8115-423e-82c2-0623426c2fc9"
       }
-    }
+    },
+    "owner": "aurex"
   }
 }
