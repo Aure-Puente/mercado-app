@@ -2,7 +2,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -108,10 +110,49 @@ function formatearHoras(value) {
   });
 }
 
+function crearFechaDesdeTexto(fechaTexto) {
+  if (!fechaTexto) return null;
+
+  const fechaLimpia = String(fechaTexto).slice(0, 10);
+  const partes = fechaLimpia.split("-");
+
+  if (partes.length !== 3) return null;
+
+  const anio = Number(partes[0]);
+  const mes = Number(partes[1]);
+  const dia = Number(partes[2]);
+
+  if (
+    Number.isNaN(anio) ||
+    Number.isNaN(mes) ||
+    Number.isNaN(dia) ||
+    anio < 1900 ||
+    mes < 1 ||
+    mes > 12 ||
+    dia < 1 ||
+    dia > 31
+  ) {
+    return null;
+  }
+
+  return new Date(anio, mes - 1, dia, 12, 0, 0, 0);
+}
+
+function obtenerTimestampFecha(fechaTexto) {
+  const fecha = crearFechaDesdeTexto(fechaTexto);
+
+  if (!fecha) return 0;
+
+  return fecha.getTime();
+}
+
 function formatearFechaVisible(fechaISO) {
   if (!fechaISO) return "Sin fecha";
 
-  const fecha = new Date(fechaISO + "T12:00:00");
+  const fecha = crearFechaDesdeTexto(fechaISO);
+
+  if (!fecha) return "Sin fecha";
+
   const diaNombre = DIAS_SEMANA[fecha.getDay()];
 
   const fechaFormateada = fecha.toLocaleDateString("es-AR", {
@@ -135,7 +176,10 @@ function obtenerInicioSemana(date) {
 }
 
 function estaEnSemanaActual(fechaTexto) {
-  const fecha = new Date(fechaTexto + "T12:00:00");
+  const fecha = crearFechaDesdeTexto(fechaTexto);
+
+  if (!fecha) return false;
+
   const hoy = new Date();
 
   const inicioSemana = obtenerInicioSemana(hoy);
@@ -169,17 +213,50 @@ function calcularTotales(registros) {
   );
 }
 
-function agruparPorMes(registros) {
+function compararFechasPorCampo(fechaA, fechaB, orden = "asc") {
+  const timestampA = obtenerTimestampFecha(fechaA);
+  const timestampB = obtenerTimestampFecha(fechaB);
+
+  if (orden === "desc") {
+    return timestampB - timestampA;
+  }
+
+  return timestampA - timestampB;
+}
+
+function ordenarRegistrosPorFecha(registros, orden = "asc") {
+  return [...registros].sort((a, b) => {
+    const resultadoFecha = compararFechasPorCampo(a.fecha, b.fecha, orden);
+
+    if (resultadoFecha !== 0) {
+      return resultadoFecha;
+    }
+
+    const idA = String(a.id || "");
+    const idB = String(b.id || "");
+
+    return orden === "desc" ? idB.localeCompare(idA) : idA.localeCompare(idB);
+  });
+}
+
+function agruparPorMes(registros, orden = "asc") {
   const grupos = {};
 
   registros.forEach((registro) => {
-    const key = `${registro.anio}-${padNumber(registro.mes)}`;
-    const mesNombre = MESES[(registro.mes || 1) - 1] || "Mes";
+    const fechaRegistro = crearFechaDesdeTexto(registro.fecha);
+
+    if (!fechaRegistro) return;
+
+    const anio = fechaRegistro.getFullYear();
+    const mes = fechaRegistro.getMonth() + 1;
+    const key = `${anio}-${padNumber(mes)}`;
+    const mesNombre = MESES[mes - 1] || "Mes";
 
     if (!grupos[key]) {
       grupos[key] = {
         key,
-        titulo: `${mesNombre} ${registro.anio}`,
+        fechaOrden: new Date(anio, mes - 1, 1, 12, 0, 0, 0).getTime(),
+        titulo: `${mesNombre} ${anio}`,
         registros: [],
         totalHoras: 0,
         totalMercaderia: 0,
@@ -191,14 +268,28 @@ function agruparPorMes(registros) {
     grupos[key].totalMercaderia += Number(registro.mercaderia) || 0;
   });
 
-  return Object.values(grupos).sort((a, b) => b.key.localeCompare(a.key));
+  return Object.values(grupos)
+    .map((grupo) => ({
+      ...grupo,
+      registros: ordenarRegistrosPorFecha(grupo.registros, orden),
+    }))
+    .sort((a, b) => {
+      if (orden === "desc") {
+        return b.fechaOrden - a.fechaOrden;
+      }
+
+      return a.fechaOrden - b.fechaOrden;
+    });
 }
 
-function agruparPorSemana(registros) {
+function agruparPorSemana(registros, orden = "asc") {
   const grupos = {};
 
   registros.forEach((registro) => {
-    const fecha = new Date(registro.fecha + "T12:00:00");
+    const fecha = crearFechaDesdeTexto(registro.fecha);
+
+    if (!fecha) return;
+
     const inicioSemana = obtenerInicioSemana(fecha);
     const finSemana = new Date(inicioSemana);
     finSemana.setDate(inicioSemana.getDate() + 6);
@@ -216,6 +307,7 @@ function agruparPorSemana(registros) {
     if (!grupos[key]) {
       grupos[key] = {
         key,
+        fechaOrden: inicioSemana.getTime(),
         titulo,
         registros: [],
         totalHoras: 0,
@@ -228,7 +320,18 @@ function agruparPorSemana(registros) {
     grupos[key].totalMercaderia += Number(registro.mercaderia) || 0;
   });
 
-  return Object.values(grupos).sort((a, b) => b.key.localeCompare(a.key));
+  return Object.values(grupos)
+    .map((grupo) => ({
+      ...grupo,
+      registros: ordenarRegistrosPorFecha(grupo.registros, orden),
+    }))
+    .sort((a, b) => {
+      if (orden === "desc") {
+        return b.fechaOrden - a.fechaOrden;
+      }
+
+      return a.fechaOrden - b.fechaOrden;
+    });
 }
 
 export default function HorasScreen() {
@@ -239,6 +342,7 @@ export default function HorasScreen() {
   const [cargandoRegistros, setCargandoRegistros] = useState(false);
 
   const [modoVista, setModoVista] = useState("mes");
+  const [ordenHistorial, setOrdenHistorial] = useState("asc");
   const [modalVisible, setModalVisible] = useState(false);
 
   const [fecha, setFecha] = useState(getFechaInput(new Date()));
@@ -264,11 +368,11 @@ export default function HorasScreen() {
 
   const grupos = useMemo(() => {
     if (modoVista === "semana") {
-      return agruparPorSemana(registros);
+      return agruparPorSemana(registros, ordenHistorial);
     }
 
-    return agruparPorMes(registros);
-  }, [registros, modoVista]);
+    return agruparPorMes(registros, ordenHistorial);
+  }, [registros, modoVista, ordenHistorial]);
 
   const cargarRegistros = async () => {
     try {
@@ -305,6 +409,10 @@ export default function HorasScreen() {
     setModalVisible(false);
   };
 
+  const cambiarOrdenHistorial = () => {
+    setOrdenHistorial((prevOrden) => (prevOrden === "asc" ? "desc" : "asc"));
+  };
+
   const guardarHoras = async () => {
     const horasNumber = normalizarNumero(horas);
     const mercaderiaNumber = normalizarNumero(mercaderia);
@@ -335,7 +443,7 @@ export default function HorasScreen() {
     try {
       setLoading(true);
 
-      const fechaDate = new Date(fecha + "T12:00:00");
+      const fechaDate = crearFechaDesdeTexto(fecha);
 
       await crearRegistroHoras({
         fecha,
@@ -739,62 +847,99 @@ export default function HorasScreen() {
               </View>
             </View>
 
-            <View
-              style={[
-                styles.viewSwitch,
-                {
-                  backgroundColor: theme.dark
-                    ? theme.colors.background + "90"
-                    : theme.colors.primary + "07",
-                  borderColor: theme.colors.outline + "45",
-                },
-              ]}
-            >
-              {MODOS_VISTA.map((item) => {
-                const selected = modoVista === item.value;
+            <View style={styles.historyControls}>
+              <View
+                style={[
+                  styles.viewSwitch,
+                  {
+                    backgroundColor: theme.dark
+                      ? theme.colors.background + "90"
+                      : theme.colors.primary + "07",
+                    borderColor: theme.colors.outline + "45",
+                  },
+                ]}
+              >
+                {MODOS_VISTA.map((item) => {
+                  const selected = modoVista === item.value;
 
-                return (
-                  <TouchableOpacity
-                    key={item.value}
-                    activeOpacity={0.85}
-                    onPress={() => setModoVista(item.value)}
-                    style={[
-                      styles.viewSwitchOption,
-                      {
-                        backgroundColor: selected
-                          ? theme.colors.primary + "20"
-                          : "transparent",
-                        borderColor: selected
-                          ? theme.colors.primary + "55"
-                          : "transparent",
-                      },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={item.icon}
-                      size={18}
-                      color={
-                        selected
-                          ? theme.colors.primary
-                          : theme.colors.onSurfaceVariant
-                      }
-                    />
-
-                    <Text
+                  return (
+                    <TouchableOpacity
+                      key={item.value}
+                      activeOpacity={0.85}
+                      onPress={() => setModoVista(item.value)}
                       style={[
-                        styles.viewSwitchText,
+                        styles.viewSwitchOption,
                         {
-                          color: selected
-                            ? theme.colors.primary
-                            : theme.colors.onSurfaceVariant,
+                          backgroundColor: selected
+                            ? theme.colors.primary + "20"
+                            : "transparent",
+                          borderColor: selected
+                            ? theme.colors.primary + "55"
+                            : "transparent",
                         },
                       ]}
                     >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <MaterialCommunityIcons
+                        name={item.icon}
+                        size={18}
+                        color={
+                          selected
+                            ? theme.colors.primary
+                            : theme.colors.onSurfaceVariant
+                        }
+                      />
+
+                      <Text
+                        style={[
+                          styles.viewSwitchText,
+                          {
+                            color: selected
+                              ? theme.colors.primary
+                              : theme.colors.onSurfaceVariant,
+                          },
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={cambiarOrdenHistorial}
+                style={[
+                  styles.orderButton,
+                  {
+                    backgroundColor: theme.dark
+                      ? theme.colors.background + "90"
+                      : theme.colors.primary + "07",
+                    borderColor: theme.colors.outline + "45",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={
+                    ordenHistorial === "asc"
+                      ? "sort-calendar-ascending"
+                      : "sort-calendar-descending"
+                  }
+                  size={19}
+                  color={theme.colors.primary}
+                />
+              <Text
+                style={[
+                  styles.orderButtonText,
+                  {
+                    color: theme.colors.primary,
+                  },
+                ]}
+                numberOfLines={1}
+              >
+                {ordenHistorial === "asc" ? "Asc." : "Desc."}
+              </Text>
+              </TouchableOpacity>
             </View>
 
             {registros.length === 0 ? (
@@ -915,172 +1060,184 @@ export default function HorasScreen() {
         animationType="fade"
         onRequestClose={cerrarModal}
       >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.modalOverlay}
-          onPress={cerrarModal}
+        <KeyboardAvoidingView
+          style={styles.modalKeyboardContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <TouchableOpacity
             activeOpacity={1}
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.outline + "45",
-              },
-            ]}
-            onPress={() => {}}
+            style={styles.modalOverlay}
+            onPress={cerrarModal}
           >
-            <View style={styles.modalHeader}>
-              <View style={styles.modalHeaderText}>
+            <ScrollView
+              contentContainerStyle={styles.modalScrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[
+                  styles.modalCard,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.outline + "45",
+                  },
+                ]}
+                onPress={() => {}}
+              >
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderText}>
+                    <View
+                      style={[
+                        styles.modalIcon,
+                        {
+                          backgroundColor: theme.colors.primary + "14",
+                        },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name="clock-plus-outline"
+                        size={22}
+                        color={theme.colors.primary}
+                      />
+                    </View>
+
+                    <View style={styles.modalTitleText}>
+                      <Text
+                        variant="titleLarge"
+                        style={[
+                          styles.modalTitle,
+                          {
+                            color: theme.colors.onSurface,
+                          },
+                        ]}
+                      >
+                        Cargar día
+                      </Text>
+
+                      <Text
+                        variant="bodyMedium"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                        }}
+                      >
+                        Guardá horas y mercadería consumida.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <IconButton
+                    icon="close"
+                    iconColor={theme.colors.onSurfaceVariant}
+                    onPress={cerrarModal}
+                  />
+                </View>
+
+                <TextInput
+                  label="Fecha"
+                  value={fecha}
+                  onChangeText={setFecha}
+                  mode="outlined"
+                  placeholder="YYYY-MM-DD"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                  label="Horas trabajadas"
+                  value={horas}
+                  onChangeText={setHoras}
+                  keyboardType="decimal-pad"
+                  mode="outlined"
+                  placeholder="Ej: 7.5"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                  label="Mercadería consumida"
+                  value={mercaderia}
+                  onChangeText={setMercaderia}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="Ej: 12000"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
+
                 <View
                   style={[
-                    styles.modalIcon,
+                    styles.infoBox,
                     {
-                      backgroundColor: theme.colors.primary + "14",
+                      backgroundColor: theme.colors.secondary + "12",
+                      borderColor: theme.colors.secondary + "35",
                     },
                   ]}
                 >
                   <MaterialCommunityIcons
-                    name="clock-plus-outline"
+                    name="basket-outline"
                     size={22}
-                    color={theme.colors.primary}
+                    color={theme.colors.secondary}
                   />
-                </View>
 
-                <View style={styles.modalTitleText}>
                   <Text
-                    variant="titleLarge"
+                    variant="bodySmall"
                     style={[
-                      styles.modalTitle,
+                      styles.infoText,
                       {
-                        color: theme.colors.onSurface,
+                        color: theme.colors.onSurfaceVariant,
                       },
                     ]}
                   >
-                    Cargar día
-                  </Text>
-
-                  <Text
-                    variant="bodyMedium"
-                    style={{
-                      color: theme.colors.onSurfaceVariant,
-                    }}
-                  >
-                    Guardá horas y mercadería consumida.
+                    Este valor después lo usamos en la calculadora mensual para
+                    descontar tu mercadería con el 1.2.
                   </Text>
                 </View>
-              </View>
 
-              <IconButton
-                icon="close"
-                iconColor={theme.colors.onSurfaceVariant}
-                onPress={cerrarModal}
-              />
-            </View>
+                <TextInput
+                  label="Observación opcional"
+                  value={observacion}
+                  onChangeText={setObservacion}
+                  mode="outlined"
+                  placeholder="Ej: turno tarde, feriado, etc."
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
 
-            <TextInput
-              label="Fecha"
-              value={fecha}
-              onChangeText={setFecha}
-              mode="outlined"
-              placeholder="YYYY-MM-DD"
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
+                <View style={styles.modalActions}>
+                  <Button
+                    mode="outlined"
+                    onPress={cerrarModal}
+                    style={[
+                      styles.modalButton,
+                      {
+                        borderColor: theme.colors.outline + "80",
+                      },
+                    ]}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.modalButtonContent}
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </Button>
 
-            <TextInput
-              label="Horas trabajadas"
-              value={horas}
-              onChangeText={setHoras}
-              keyboardType="decimal-pad"
-              mode="outlined"
-              placeholder="Ej: 7.5"
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <TextInput
-              label="Mercadería consumida"
-              value={mercaderia}
-              onChangeText={setMercaderia}
-              keyboardType="numeric"
-              mode="outlined"
-              placeholder="Ej: 12000"
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <View
-              style={[
-                styles.infoBox,
-                {
-                  backgroundColor: theme.colors.secondary + "12",
-                  borderColor: theme.colors.secondary + "35",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="basket-outline"
-                size={22}
-                color={theme.colors.secondary}
-              />
-
-              <Text
-                variant="bodySmall"
-                style={[
-                  styles.infoText,
-                  {
-                    color: theme.colors.onSurfaceVariant,
-                  },
-                ]}
-              >
-                Este valor después lo usamos en la calculadora mensual para
-                descontar tu mercadería con el 1.2.
-              </Text>
-            </View>
-
-            <TextInput
-              label="Observación opcional"
-              value={observacion}
-              onChangeText={setObservacion}
-              mode="outlined"
-              placeholder="Ej: turno tarde, feriado, etc."
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <View style={styles.modalActions}>
-              <Button
-                mode="outlined"
-                onPress={cerrarModal}
-                style={[
-                  styles.modalButton,
-                  {
-                    borderColor: theme.colors.outline + "80",
-                  },
-                ]}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.modalButtonContent}
-                disabled={loading}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                mode="contained"
-                onPress={guardarHoras}
-                loading={loading}
-                disabled={loading}
-                style={styles.modalButton}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.modalButtonContent}
-              >
-                Guardar
-              </Button>
-            </View>
+                  <Button
+                    mode="contained"
+                    onPress={guardarHoras}
+                    loading={loading}
+                    disabled={loading}
+                    style={styles.modalButton}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.modalButtonContent}
+                  >
+                    Guardar
+                  </Button>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -1221,13 +1378,19 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
 
+  historyControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 18,
+  },
   viewSwitch: {
+    flex: 1,
     flexDirection: "row",
     borderWidth: 1,
     borderRadius: 18,
     padding: 4,
     gap: 4,
-    marginBottom: 18,
   },
   viewSwitchOption: {
     flex: 1,
@@ -1244,7 +1407,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
   },
-
+  orderButton: {
+    minHeight: 54,
+    minWidth: 82,
+    borderWidth: 1,
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+  },
+  orderButtonText: {
+    fontSize: 13,
+    fontWeight: "900"
+  },
   emptyBox: {
     borderWidth: 1,
     borderRadius: 22,
@@ -1335,11 +1512,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
 
+  modalKeyboardContainer: {
+    flex: 1,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(15, 23, 42, 0.62)",
+  },
+  modalScrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 20,
+    paddingVertical: 34,
   },
   modalCard: {
     borderRadius: 30,

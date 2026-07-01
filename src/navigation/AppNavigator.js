@@ -4,7 +4,6 @@ import { View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
 import MercadoScreen from "../screens/MercadoScreen";
 import CajaScreen from "../screens/CajaScreen";
 import PagosScreen from "../screens/PagosScreen";
@@ -80,7 +79,7 @@ export default function AppNavigator({ theme, isDarkMode, setIsDarkMode }) {
               >
                 <MaterialCommunityIcons
                   name={iconName}
-                  size={focused ? 24 : 22}
+                  size={focused ? 29 : 27}
                   color={color}
                 />
               </View>
@@ -92,10 +91,7 @@ export default function AppNavigator({ theme, isDarkMode, setIsDarkMode }) {
 
         <Tab.Screen name="Caja" component={CajaScreen} />
 
-        <Tab.Screen
-          name="Pedidos"
-          component={PagosScreen}
-        />
+        <Tab.Screen name="Pedidos" component={PagosScreen} />
 
         <Tab.Screen name="Horas" component={HorasScreen} />
 
@@ -146,8 +142,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   iconWrapper: {
-    width: 42,
-    height: 32,
+    width: 46,
+    height: 36,
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",

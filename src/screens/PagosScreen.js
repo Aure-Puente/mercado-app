@@ -1,8 +1,11 @@
+//Importaciones:
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -21,7 +24,6 @@ import {
 } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
 import {
   crearResumenPagos,
   obtenerUltimosResumenesPagos,
@@ -39,6 +41,7 @@ const DIAS_SEMANA = [
   "Sábado",
 ];
 
+//JS:
 const ORIGENES_DINERO = [
   {
     value: "Caja",
@@ -419,31 +422,32 @@ export default function PagosScreen() {
               >
                 <MaterialCommunityIcons
                   name="cash-register"
-                  size={20}
+                  size={18}
                   color={theme.colors.primary}
                 />
               </View>
 
               <Text
-                variant="bodyMedium"
                 style={[
                   styles.summaryLabel,
                   {
                     color: theme.colors.onSurfaceVariant,
                   },
                 ]}
+                numberOfLines={1}
               >
                 Caja
               </Text>
 
               <Text
-                variant="titleLarge"
                 style={[
                   styles.summaryNumber,
                   {
                     color: theme.colors.primary,
                   },
                 ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
                 ${formatearMonto(totalCaja)}
               </Text>
@@ -471,91 +475,91 @@ export default function PagosScreen() {
               >
                 <MaterialCommunityIcons
                   name="archive-outline"
-                  size={20}
+                  size={18}
                   color={theme.colors.secondary}
                 />
               </View>
 
               <Text
-                variant="bodyMedium"
                 style={[
                   styles.summaryLabel,
                   {
                     color: theme.colors.onSurfaceVariant,
                   },
                 ]}
+                numberOfLines={1}
               >
                 Atrás
               </Text>
 
               <Text
-                variant="titleLarge"
                 style={[
                   styles.summaryNumber,
                   {
                     color: theme.colors.secondary,
                   },
                 ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
                 ${formatearMonto(totalAtras)}
               </Text>
             </Card.Content>
           </Card>
-        </View>
 
-        <Card
-          mode="contained"
-          style={[
-            styles.transferCard,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.outline + "55",
-            },
-          ]}
-        >
-          <Card.Content style={styles.transferContent}>
-            <View
-              style={[
-                styles.transferIcon,
-                {
-                  backgroundColor: "#3B82F618",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="bank-transfer"
-                size={24}
-                color="#3B82F6"
-              />
-            </View>
+          <Card
+            mode="contained"
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+              },
+            ]}
+          >
+            <Card.Content style={styles.summaryContent}>
+              <View
+                style={[
+                  styles.summaryIcon,
+                  {
+                    backgroundColor: "#3B82F618",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="bank-transfer"
+                  size={18}
+                  color="#3B82F6"
+                />
+              </View>
 
-            <View style={styles.transferText}>
               <Text
-                variant="bodyMedium"
                 style={[
                   styles.summaryLabel,
                   {
                     color: theme.colors.onSurfaceVariant,
                   },
                 ]}
+                numberOfLines={1}
               >
-                Transferencia
+                Transfer.
               </Text>
 
               <Text
-                variant="titleLarge"
                 style={[
                   styles.summaryNumber,
                   {
                     color: "#3B82F6",
                   },
                 ]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
               >
                 ${formatearMonto(totalTransferencia)}
               </Text>
-            </View>
-          </Card.Content>
-        </Card>
+            </Card.Content>
+          </Card>
+        </View>
 
         <Card
           mode="contained"
@@ -1053,181 +1057,193 @@ export default function PagosScreen() {
         animationType="fade"
         onRequestClose={cerrarModal}
       >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.modalOverlay}
-          onPress={cerrarModal}
+        <KeyboardAvoidingView
+          style={styles.modalKeyboardContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
           <TouchableOpacity
             activeOpacity={1}
-            style={[
-              styles.modalCard,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.outline + "45",
-              },
-            ]}
-            onPress={() => {}}
+            style={styles.modalOverlay}
+            onPress={cerrarModal}
           >
-            <View style={styles.modalHeader}>
-              <View style={styles.modalTitleBox}>
-                <View
-                  style={[
-                    styles.modalIcon,
-                    {
-                      backgroundColor: theme.colors.primary + "14",
-                    },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="cash-plus"
-                    size={22}
-                    color={theme.colors.primary}
+            <ScrollView
+              contentContainerStyle={styles.modalScrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[
+                  styles.modalCard,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.outline + "45",
+                  },
+                ]}
+                onPress={() => {}}
+              >
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalTitleBox}>
+                    <View
+                      style={[
+                        styles.modalIcon,
+                        {
+                          backgroundColor: theme.colors.primary + "14",
+                        },
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name="cash-plus"
+                        size={22}
+                        color={theme.colors.primary}
+                      />
+                    </View>
+
+                    <View style={styles.modalTitleText}>
+                      <Text
+                        variant="titleLarge"
+                        style={[
+                          styles.modalTitle,
+                          {
+                            color: theme.colors.onSurface,
+                          },
+                        ]}
+                      >
+                        Nuevo pago
+                      </Text>
+
+                      <Text
+                        variant="bodyMedium"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                        }}
+                      >
+                        Cargá proveedor, monto y origen del dinero.
+                      </Text>
+                    </View>
+                  </View>
+
+                  <IconButton
+                    icon="close"
+                    iconColor={theme.colors.onSurfaceVariant}
+                    onPress={cerrarModal}
                   />
                 </View>
 
-                <View style={styles.modalTitleText}>
-                  <Text
-                    variant="titleLarge"
-                    style={[
-                      styles.modalTitle,
-                      {
-                        color: theme.colors.onSurface,
-                      },
-                    ]}
-                  >
-                    Nuevo pago
-                  </Text>
+                <TextInput
+                  label="Proveedor"
+                  value={proveedor}
+                  onChangeText={setProveedor}
+                  mode="outlined"
+                  placeholder="Ej: Coca Cola"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
 
-                  <Text
-                    variant="bodyMedium"
-                    style={{
-                      color: theme.colors.onSurfaceVariant,
-                    }}
-                  >
-                    Cargá proveedor, monto y origen del dinero.
-                  </Text>
+                <TextInput
+                  label="Monto"
+                  value={monto}
+                  onChangeText={setMonto}
+                  keyboardType="numeric"
+                  mode="outlined"
+                  placeholder="Ej: 20000"
+                  style={styles.input}
+                  outlineStyle={styles.inputOutline}
+                />
+
+                <Text
+                  variant="titleSmall"
+                  style={[
+                    styles.origenTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Origen del dinero
+                </Text>
+
+                <View style={styles.origenOptions}>
+                  {ORIGENES_DINERO.map((item) => {
+                    const selected = origen === item.value;
+                    const itemColor = getOrigenColor(item.value);
+
+                    return (
+                      <TouchableOpacity
+                        key={item.value}
+                        activeOpacity={0.85}
+                        onPress={() => setOrigen(item.value)}
+                        style={[
+                          styles.origenOption,
+                          {
+                            backgroundColor: selected
+                              ? itemColor + "20"
+                              : theme.dark
+                              ? theme.colors.background + "90"
+                              : theme.colors.primary + "07",
+                            borderColor: selected
+                              ? itemColor + "70"
+                              : theme.colors.outline + "45",
+                          },
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name={item.icon}
+                          size={18}
+                          color={
+                            selected ? itemColor : theme.colors.onSurfaceVariant
+                          }
+                        />
+
+                        <Text
+                          style={[
+                            styles.origenOptionText,
+                            {
+                              color: selected
+                                ? itemColor
+                                : theme.colors.onSurfaceVariant,
+                            },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-              </View>
 
-              <IconButton
-                icon="close"
-                iconColor={theme.colors.onSurfaceVariant}
-                onPress={cerrarModal}
-              />
-            </View>
-
-            <TextInput
-              label="Proveedor"
-              value={proveedor}
-              onChangeText={setProveedor}
-              mode="outlined"
-              placeholder="Ej: Coca Cola"
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <TextInput
-              label="Monto"
-              value={monto}
-              onChangeText={setMonto}
-              keyboardType="numeric"
-              mode="outlined"
-              placeholder="Ej: 20000"
-              style={styles.input}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <Text
-              variant="titleSmall"
-              style={[
-                styles.origenTitle,
-                {
-                  color: theme.colors.onSurface,
-                },
-              ]}
-            >
-              Origen del dinero
-            </Text>
-
-            <View style={styles.origenOptions}>
-              {ORIGENES_DINERO.map((item) => {
-                const selected = origen === item.value;
-                const itemColor = getOrigenColor(item.value);
-
-                return (
-                  <TouchableOpacity
-                    key={item.value}
-                    activeOpacity={0.85}
-                    onPress={() => setOrigen(item.value)}
+                <View style={styles.modalActions}>
+                  <Button
+                    mode="outlined"
+                    onPress={cerrarModal}
                     style={[
-                      styles.origenOption,
+                      styles.modalButton,
                       {
-                        backgroundColor: selected
-                          ? itemColor + "20"
-                          : theme.dark
-                          ? theme.colors.background + "90"
-                          : theme.colors.primary + "07",
-                        borderColor: selected
-                          ? itemColor + "70"
-                          : theme.colors.outline + "45",
+                        borderColor: theme.colors.outline + "80",
                       },
                     ]}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.modalButtonContent}
                   >
-                    <MaterialCommunityIcons
-                      name={item.icon}
-                      size={18}
-                      color={
-                        selected ? itemColor : theme.colors.onSurfaceVariant
-                      }
-                    />
+                    Cancelar
+                  </Button>
 
-                    <Text
-                      style={[
-                        styles.origenOptionText,
-                        {
-                          color: selected
-                            ? itemColor
-                            : theme.colors.onSurfaceVariant,
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={styles.modalActions}>
-              <Button
-                mode="outlined"
-                onPress={cerrarModal}
-                style={[
-                  styles.modalButton,
-                  {
-                    borderColor: theme.colors.outline + "80",
-                  },
-                ]}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.modalButtonContent}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                mode="contained"
-                onPress={agregarPago}
-                style={styles.modalButton}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.modalButtonContent}
-              >
-                Agregar
-              </Button>
-            </View>
+                  <Button
+                    mode="contained"
+                    onPress={agregarPago}
+                    style={styles.modalButton}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.modalButtonContent}
+                  >
+                    Agregar
+                  </Button>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -1270,56 +1286,37 @@ const styles = StyleSheet.create({
 
   summaryRow: {
     flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 18,
   },
   summaryCard: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 22,
     borderWidth: 1,
     overflow: "hidden",
   },
   summaryContent: {
-    paddingTop: 16,
+    paddingTop: 14,
+    paddingHorizontal: 9,
+    paddingBottom: 13,
   },
   summaryIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   summaryLabel: {
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "800",
   },
   summaryNumber: {
+    fontSize: 15,
     fontWeight: "900",
     letterSpacing: -0.4,
     marginTop: 5,
-  },
-
-  transferCard: {
-    borderRadius: 24,
-    borderWidth: 1,
-    marginBottom: 18,
-    overflow: "hidden",
-  },
-  transferContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 16,
-  },
-  transferIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  transferText: {
-    flex: 1,
   },
 
   mainCard: {
@@ -1531,11 +1528,18 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
 
+  modalKeyboardContainer: {
+    flex: 1,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(15, 23, 42, 0.62)",
+  },
+  modalScrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 20,
+    paddingVertical: 34,
   },
   modalCard: {
     borderRadius: 30,

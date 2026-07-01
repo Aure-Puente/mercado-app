@@ -1,6 +1,13 @@
 //Importaciones:
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import {
   Button,
   Card,
@@ -11,7 +18,6 @@ import {
   useTheme,
 } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
 import {
   activarRecordatorioHoras,
   desactivarRecordatorioHoras,
@@ -19,6 +25,7 @@ import {
   obtenerConfigRecordatorioHoras,
 } from "../services/notificationsService";
 
+//JS:
 function formatHora(hour, minute) {
   const h = String(hour).padStart(2, "0");
   const m = String(minute).padStart(2, "0");
@@ -144,396 +151,412 @@ export default function ConfigScreen({ isDarkMode, setIsDarkMode }) {
   const horaActualVisible = formatHora(Number(hora), Number(minutos));
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={[
-        styles.container,
+        styles.keyboardContainer,
         {
           backgroundColor: theme.colors.background,
         },
       ]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <View style={styles.header}>
-        <View style={styles.headerTitleBox}>
-          <View
-            style={[
-              styles.headerIcon,
-              {
-                backgroundColor: theme.colors.primary + "18",
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color={theme.colors.primary}
-            />
+      <ScrollView
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTitleBox}>
+            <View
+              style={[
+                styles.headerIcon,
+                {
+                  backgroundColor: theme.colors.primary + "18",
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="cog-outline"
+                size={24}
+                color={theme.colors.primary}
+              />
+            </View>
+
+            <Text
+              variant="headlineMedium"
+              style={[
+                styles.title,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Config
+            </Text>
           </View>
 
           <Text
-            variant="headlineMedium"
+            variant="bodyLarge"
             style={[
-              styles.title,
+              styles.subtitle,
               {
-                color: theme.colors.onSurface,
+                color: theme.colors.onSurfaceVariant,
               },
             ]}
           >
-            Config
+            Ajustá la apariencia y los recordatorios de la app.
           </Text>
         </View>
 
-        <Text
-          variant="bodyLarge"
+        <Card
+          mode="contained"
           style={[
-            styles.subtitle,
+            styles.card,
             {
-              color: theme.colors.onSurfaceVariant,
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outline + "55",
             },
           ]}
         >
-          Ajustá la apariencia y los recordatorios de la app.
-        </Text>
-      </View>
-
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.outline + "55",
-          },
-        ]}
-      >
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.settingRow}>
-            <View
-              style={[
-                styles.iconBox,
-                {
-                  backgroundColor: theme.colors.primary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={isDarkMode ? "weather-night" : "white-balance-sunny"}
-                size={24}
-                color={theme.colors.primary}
-              />
-            </View>
-
-            <View style={styles.textBox}>
-              <Text
-                variant="titleMedium"
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.settingRow}>
+              <View
                 style={[
-                  styles.cardTitle,
+                  styles.iconBox,
                   {
-                    color: theme.colors.onSurface,
+                    backgroundColor: theme.colors.primary + "14",
                   },
                 ]}
               >
-                Tema oscuro
-              </Text>
+                <MaterialCommunityIcons
+                  name={isDarkMode ? "weather-night" : "white-balance-sunny"}
+                  size={24}
+                  color={theme.colors.primary}
+                />
+              </View>
 
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Cambiá entre modo claro y modo oscuro.
-              </Text>
-            </View>
+              <View style={styles.textBox}>
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Tema oscuro
+                </Text>
 
-            <Switch
-              value={isDarkMode}
-              onValueChange={() => setIsDarkMode(!isDarkMode)}
-            />
-          </View>
-        </Card.Content>
-      </Card>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Cambiá entre modo claro y modo oscuro.
+                </Text>
+              </View>
 
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.outline + "55",
-          },
-        ]}
-      >
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.settingRow}>
-            <View
-              style={[
-                styles.iconBox,
-                {
-                  backgroundColor: theme.colors.secondary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="bell-ring-outline"
-                size={24}
-                color={theme.colors.secondary}
+              <Switch
+                value={isDarkMode}
+                onValueChange={() => setIsDarkMode(!isDarkMode)}
               />
             </View>
+          </Card.Content>
+        </Card>
 
-            <View style={styles.textBox}>
-              <Text
-                variant="titleMedium"
+        <Card
+          mode="contained"
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outline + "55",
+            },
+          ]}
+        >
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.settingRow}>
+              <View
                 style={[
-                  styles.cardTitle,
+                  styles.iconBox,
                   {
-                    color: theme.colors.onSurface,
+                    backgroundColor: theme.colors.secondary + "14",
                   },
                 ]}
               >
-                Recordatorio de horas
-              </Text>
+                <MaterialCommunityIcons
+                  name="bell-ring-outline"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+              </View>
 
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Recibí una notificación diaria para cargar tus horas.
-              </Text>
+              <View style={styles.textBox}>
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Recordatorio de horas
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Recibí una notificación diaria para cargar tus horas.
+                </Text>
+              </View>
+
+              <Switch
+                value={notificacionesActivas}
+                onValueChange={toggleNotificaciones}
+                disabled={loadingNoti}
+              />
             </View>
 
-            <Switch
-              value={notificacionesActivas}
-              onValueChange={toggleNotificaciones}
-              disabled={loadingNoti}
-            />
-          </View>
-
-          <View
-            style={[
-              styles.statusBox,
-              {
-                backgroundColor: notificacionesActivas
-                  ? theme.colors.primary + "10"
-                  : theme.colors.secondary + "10",
-                borderColor: notificacionesActivas
-                  ? theme.colors.primary + "25"
-                  : theme.colors.secondary + "25",
-              },
-            ]}
-          >
             <View
               style={[
-                styles.statusIcon,
+                styles.statusBox,
                 {
                   backgroundColor: notificacionesActivas
-                    ? theme.colors.primary + "18"
-                    : theme.colors.secondary + "18",
+                    ? theme.colors.primary + "10"
+                    : theme.colors.secondary + "10",
+                  borderColor: notificacionesActivas
+                    ? theme.colors.primary + "25"
+                    : theme.colors.secondary + "25",
                 },
               ]}
             >
-              <MaterialCommunityIcons
-                name={
-                  notificacionesActivas
-                    ? "bell-check-outline"
-                    : "bell-off-outline"
-                }
-                size={20}
-                color={
-                  notificacionesActivas
-                    ? theme.colors.primary
-                    : theme.colors.secondary
-                }
-              />
-            </View>
-
-            <View style={styles.statusTextBox}>
-              <Text
-                variant="titleSmall"
+              <View
                 style={[
-                  styles.statusTitle,
+                  styles.statusIcon,
                   {
-                    color: theme.colors.onSurface,
+                    backgroundColor: notificacionesActivas
+                      ? theme.colors.primary + "18"
+                      : theme.colors.secondary + "18",
                   },
                 ]}
               >
-                {notificacionesActivas
-                  ? "Recordatorio activo"
-                  : "Recordatorio desactivado"}
-              </Text>
+                <MaterialCommunityIcons
+                  name={
+                    notificacionesActivas
+                      ? "bell-check-outline"
+                      : "bell-off-outline"
+                  }
+                  size={20}
+                  color={
+                    notificacionesActivas
+                      ? theme.colors.primary
+                      : theme.colors.secondary
+                  }
+                />
+              </View>
 
-              <Text
-                variant="bodySmall"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                {notificacionesActivas
-                  ? `Todos los días a las ${horaActualVisible}.`
-                  : `Horario guardado: ${horaActualVisible}.`}
-              </Text>
+              <View style={styles.statusTextBox}>
+                <Text
+                  variant="titleSmall"
+                  style={[
+                    styles.statusTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  {notificacionesActivas
+                    ? "Recordatorio activo"
+                    : "Recordatorio desactivado"}
+                </Text>
+
+                <Text
+                  variant="bodySmall"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  {notificacionesActivas
+                    ? `Todos los días a las ${horaActualVisible}.`
+                    : `Horario guardado: ${horaActualVisible}.`}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          <Divider
-            style={[
-              styles.divider,
-              {
-                backgroundColor: theme.colors.outline + "30",
-              },
-            ]}
-          />
+            <Divider
+              style={[
+                styles.divider,
+                {
+                  backgroundColor: theme.colors.outline + "30",
+                },
+              ]}
+            />
 
-          <View style={styles.timeHeader}>
+            <View style={styles.timeHeader}>
+              <View
+                style={[
+                  styles.timeIcon,
+                  {
+                    backgroundColor: theme.colors.primary + "14",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="clock-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <View style={styles.timeHeaderText}>
+                <Text
+                  variant="titleSmall"
+                  style={[
+                    styles.timeTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Horario del recordatorio
+                </Text>
+
+                <Text
+                  variant="bodySmall"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Actualmente configurado a las {horaActualVisible}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.timeInputs}>
+              <TextInput
+                label="Hora"
+                value={hora}
+                onChangeText={setHora}
+                keyboardType="number-pad"
+                mode="outlined"
+                maxLength={2}
+                style={styles.timeInput}
+                outlineStyle={styles.inputOutline}
+              />
+
+              <TextInput
+                label="Minutos"
+                value={minutos}
+                onChangeText={setMinutos}
+                keyboardType="number-pad"
+                mode="outlined"
+                maxLength={2}
+                style={styles.timeInput}
+                outlineStyle={styles.inputOutline}
+              />
+            </View>
+
+            <Button
+              mode="outlined"
+              icon="content-save-outline"
+              onPress={guardarHorario}
+              loading={loadingNoti}
+              disabled={loadingNoti}
+              style={[
+                styles.saveButton,
+                {
+                  borderColor: theme.colors.outline + "80",
+                },
+              ]}
+              labelStyle={styles.buttonLabel}
+              contentStyle={styles.saveButtonContent}
+            >
+              Guardar horario
+            </Button>
+          </Card.Content>
+        </Card>
+
+        <Card
+          mode="contained"
+          style={[
+            styles.infoCard,
+            {
+              backgroundColor: theme.colors.primary + "10",
+              borderColor: theme.colors.primary + "25",
+            },
+          ]}
+        >
+          <Card.Content style={styles.infoContent}>
             <View
               style={[
-                styles.timeIcon,
+                styles.infoIcon,
                 {
-                  backgroundColor: theme.colors.primary + "14",
+                  backgroundColor: theme.colors.primary + "18",
                 },
               ]}
             >
               <MaterialCommunityIcons
-                name="clock-outline"
-                size={20}
+                name="storefront-outline"
+                size={22}
                 color={theme.colors.primary}
               />
             </View>
 
-            <View style={styles.timeHeaderText}>
+            <View style={styles.infoTextBox}>
               <Text
                 variant="titleSmall"
                 style={[
-                  styles.timeTitle,
+                  styles.infoTitle,
                   {
-                    color: theme.colors.onSurface,
+                    color: theme.colors.primary,
                   },
                 ]}
               >
-                Horario del recordatorio
+                Mercado App
               </Text>
 
               <Text
-                variant="bodySmall"
+                variant="bodyMedium"
                 style={{
                   color: theme.colors.onSurfaceVariant,
                 }}
               >
-                Actualmente configurado a las {horaActualVisible}
+                Base lista para cargar pedidos, horas, pagos y cálculos del
+                trabajo.
               </Text>
             </View>
-          </View>
-
-          <View style={styles.timeInputs}>
-            <TextInput
-              label="Hora"
-              value={hora}
-              onChangeText={setHora}
-              keyboardType="number-pad"
-              mode="outlined"
-              maxLength={2}
-              style={styles.timeInput}
-              outlineStyle={styles.inputOutline}
-            />
-
-            <TextInput
-              label="Minutos"
-              value={minutos}
-              onChangeText={setMinutos}
-              keyboardType="number-pad"
-              mode="outlined"
-              maxLength={2}
-              style={styles.timeInput}
-              outlineStyle={styles.inputOutline}
-            />
-          </View>
-
-          <Button
-            mode="outlined"
-            icon="content-save-outline"
-            onPress={guardarHorario}
-            loading={loadingNoti}
-            disabled={loadingNoti}
-            style={[
-              styles.saveButton,
-              {
-                borderColor: theme.colors.outline + "80",
-              },
-            ]}
-            labelStyle={styles.buttonLabel}
-            contentStyle={styles.saveButtonContent}
-          >
-            Guardar horario
-          </Button>
-        </Card.Content>
-      </Card>
-
-      <Card
-        mode="contained"
-        style={[
-          styles.infoCard,
-          {
-            backgroundColor: theme.colors.primary + "10",
-            borderColor: theme.colors.primary + "25",
-          },
-        ]}
-      >
-        <Card.Content style={styles.infoContent}>
-          <View
-            style={[
-              styles.infoIcon,
-              {
-                backgroundColor: theme.colors.primary + "18",
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="storefront-outline"
-              size={22}
-              color={theme.colors.primary}
-            />
-          </View>
-
-          <View style={styles.infoTextBox}>
-            <Text
-              variant="titleSmall"
-              style={[
-                styles.infoTitle,
-                {
-                  color: theme.colors.primary,
-                },
-              ]}
-            >
-              Mercado App
-            </Text>
-
-            <Text
-              variant="bodyMedium"
-              style={{
-                color: theme.colors.onSurfaceVariant,
-              }}
-            >
-              Base lista para cargar pedidos, horas, pagos y cálculos del
-              trabajo.
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   content: {
     padding: 20,
     paddingTop: 50,
-    paddingBottom: 110,
+    paddingBottom: 210,
   },
 
   header: {

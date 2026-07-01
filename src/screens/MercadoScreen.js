@@ -6,6 +6,7 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from "react-native";
 import {
@@ -20,12 +21,12 @@ import {
 } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
 import {
   crearPedidoMercado,
   obtenerUltimosPedidosMercado,
 } from "../services/mercadoService";
 
+//JS:
 const WHATSAPP_NUMBER = "5492234977176";
 
 const CATEGORIAS_MERCADO = [
@@ -46,16 +47,12 @@ const CATEGORIAS_MERCADO = [
     ],
   },
   {
-    id: "bananas",
-    titulo: "Bananas",
-    icono: "fruit-cherries",
-    productos: ["Banana Ecuador", "Banana Brasil"],
-  },
-  {
     id: "frutas",
     titulo: "Frutas",
     icono: "food-apple",
     productos: [
+      "Banana Ecuador",
+      "Banana Brasil",
       "Kiwi",
       "Manzana verde",
       "Manzana roja buena",
@@ -120,6 +117,16 @@ const CATEGORIAS_MERCADO = [
     icono: "package-variant-closed",
     productos: ["Bandeja de sopa", "Bandeja de ensalada", "Bandeja de wok"],
   },
+  {
+    id: "huevos",
+    titulo: "Huevos",
+    icono: "egg-outline",
+    productos: [
+      "Huevos de color",
+      "Huevos blancos grandes",
+      "Huevos blancos chicos",
+    ],
+  },
 ];
 
 const DIAS_SEMANA = [
@@ -136,10 +143,28 @@ function obtenerTodosLosProductos() {
   return CATEGORIAS_MERCADO.flatMap((categoria) => categoria.productos);
 }
 
+function normalizarProducto(producto) {
+  if (typeof producto === "string") {
+    return {
+      nombre: producto,
+      cantidad: 0,
+    };
+  }
+
+  const cantidadNumber = Number(producto?.cantidad);
+
+  return {
+    nombre: producto?.nombre || producto?.producto || "",
+    cantidad: Number.isNaN(cantidadNumber) ? 0 : cantidadNumber,
+  };
+}
+
 function agruparProductosPorCategoria(productos) {
+  const productosNormalizados = productos.map(normalizarProducto);
+
   return CATEGORIAS_MERCADO.map((categoria) => {
-    const productosCategoria = productos.filter((producto) =>
-      categoria.productos.includes(producto)
+    const productosCategoria = productosNormalizados.filter((producto) =>
+      categoria.productos.includes(producto.nombre)
     );
 
     return {
@@ -169,18 +194,20 @@ function formatearFecha(fechaISO) {
   return `${diaNombre} ${fechaFormateada} - ${horaFormateada}`;
 }
 
+function formatearProductoMensaje(producto) {
+  if (producto.cantidad > 0) {
+    return `• ${producto.cantidad} ${producto.nombre}`;
+  }
+
+  return `• ${producto.nombre}`;
+}
+
 function armarMensajePedido(productos) {
-  const productosAgrupados = agruparProductosPorCategoria(productos);
+  const productosNormalizados = productos.map(normalizarProducto);
 
-  const listaProductos = productosAgrupados
-    .map((categoria) => {
-      const productosTexto = categoria.productos
-        .map((producto) => `• ${producto}`)
-        .join("\n");
-
-      return `*${categoria.titulo}:*\n${productosTexto}`;
-    })
-    .join("\n\n");
+  const listaProductos = productosNormalizados
+    .map(formatearProductoMensaje)
+    .join("\n");
 
   return `Hola, el pedido del mercado para mañana es:\n\n${listaProductos}\n\nMuchas gracias.`;
 }
@@ -188,7 +215,7 @@ function armarMensajePedido(productos) {
 export default function MercadoScreen() {
   const theme = useTheme();
 
-  const [productosSeleccionados, setProductosSeleccionados] = useState([]);
+  const [productosSeleccionados, setProductosSeleccionados] = useState({});
   const [historial, setHistorial] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
@@ -196,16 +223,29 @@ export default function MercadoScreen() {
     citricos: false,
   });
 
-  const totalSeleccionados = productosSeleccionados.length;
+  const productosSeleccionadosArray = useMemo(() => {
+    return Object.entries(productosSeleccionados).map(([nombre, cantidad]) => ({
+      nombre,
+      cantidad,
+    }));
+  }, [productosSeleccionados]);
+
+  const totalSeleccionados = productosSeleccionadosArray.length;
+
+  const totalUnidades = productosSeleccionadosArray.reduce(
+    (total, producto) => total + producto.cantidad,
+    0
+  );
+
   const totalProductos = obtenerTodosLosProductos().length;
 
   const mensajePreview = useMemo(() => {
-    if (productosSeleccionados.length === 0) {
+    if (productosSeleccionadosArray.length === 0) {
       return "Todavía no seleccionaste productos.";
     }
 
-    return armarMensajePedido(productosSeleccionados);
-  }, [productosSeleccionados]);
+    return armarMensajePedido(productosSeleccionadosArray);
+  }, [productosSeleccionadosArray]);
 
   const cargarHistorial = async () => {
     try {
@@ -239,22 +279,75 @@ export default function MercadoScreen() {
 
   const toggleProducto = (producto) => {
     setProductosSeleccionados((prevProductos) => {
-      const yaExiste = prevProductos.includes(producto);
+      const yaExiste = Object.prototype.hasOwnProperty.call(
+        prevProductos,
+        producto
+      );
 
       if (yaExiste) {
-        return prevProductos.filter((item) => item !== producto);
+        const copia = { ...prevProductos };
+        delete copia[producto];
+        return copia;
       }
 
-      return [...prevProductos, producto];
+      return {
+        ...prevProductos,
+        [producto]: 0,
+      };
+    });
+  };
+
+  const aumentarCantidad = (producto) => {
+    setProductosSeleccionados((prevProductos) => {
+      const yaExiste = Object.prototype.hasOwnProperty.call(
+        prevProductos,
+        producto
+      );
+
+      if (!yaExiste) {
+        return {
+          ...prevProductos,
+          [producto]: 1,
+        };
+      }
+
+      return {
+        ...prevProductos,
+        [producto]: prevProductos[producto] + 1,
+      };
+    });
+  };
+
+  const disminuirCantidad = (producto) => {
+    setProductosSeleccionados((prevProductos) => {
+      const yaExiste = Object.prototype.hasOwnProperty.call(
+        prevProductos,
+        producto
+      );
+
+      if (!yaExiste) {
+        return prevProductos;
+      }
+
+      const cantidadActual = prevProductos[producto];
+
+      if (cantidadActual <= 0) {
+        return prevProductos;
+      }
+
+      return {
+        ...prevProductos,
+        [producto]: cantidadActual - 1,
+      };
     });
   };
 
   const limpiarSeleccion = () => {
-    setProductosSeleccionados([]);
+    setProductosSeleccionados({});
   };
 
   const enviarPedido = async () => {
-    if (productosSeleccionados.length === 0) {
+    if (productosSeleccionadosArray.length === 0) {
       Alert.alert(
         "Pedido vacío",
         "Seleccioná al menos un producto para enviar el pedido."
@@ -265,10 +358,10 @@ export default function MercadoScreen() {
     try {
       setLoading(true);
 
-      const mensaje = armarMensajePedido(productosSeleccionados);
+      const mensaje = armarMensajePedido(productosSeleccionadosArray);
 
       await crearPedidoMercado({
-        productos: productosSeleccionados,
+        productos: productosSeleccionadosArray,
         mensaje,
       });
 
@@ -372,8 +465,8 @@ export default function MercadoScreen() {
             },
           ]}
         >
-          Seleccioná frutas y verduras para armar el pedido y enviarlo por
-          WhatsApp.
+          Seleccioná frutas, verduras, bandejas y huevos para armar el pedido y
+          enviarlo por WhatsApp.
         </Text>
       </View>
 
@@ -382,9 +475,7 @@ export default function MercadoScreen() {
         style={[
           styles.card,
           {
-            backgroundColor: theme.dark
-              ? theme.colors.surface
-              : theme.colors.surface,
+            backgroundColor: theme.colors.surface,
             borderColor: theme.dark
               ? theme.colors.outline + "70"
               : theme.colors.outline + "55",
@@ -416,7 +507,7 @@ export default function MercadoScreen() {
                 ]}
               >
                 {totalSeleccionados} seleccionados de {totalProductos}{" "}
-                productos.
+                productos. Total con cantidad: {totalUnidades}.
               </Text>
             </View>
 
@@ -445,7 +536,11 @@ export default function MercadoScreen() {
           <View style={styles.categoriesContainer}>
             {CATEGORIAS_MERCADO.map((categoria) => {
               const cantidadSeleccionada = categoria.productos.filter(
-                (producto) => productosSeleccionados.includes(producto)
+                (producto) =>
+                  Object.prototype.hasOwnProperty.call(
+                    productosSeleccionados,
+                    producto
+                  )
               ).length;
 
               const estaExpandida = !!expandedCategorias[categoria.id];
@@ -518,35 +613,126 @@ export default function MercadoScreen() {
                       ]}
                     >
                       {categoria.productos.map((producto, index) => {
-                        const checked =
-                          productosSeleccionados.includes(producto);
+                        const checked = Object.prototype.hasOwnProperty.call(
+                          productosSeleccionados,
+                          producto
+                        );
+
+                        const cantidad = checked
+                          ? productosSeleccionados[producto]
+                          : 0;
 
                         return (
                           <View key={producto}>
-                            <Checkbox.Item
-                              label={producto}
-                              status={checked ? "checked" : "unchecked"}
-                              onPress={() => toggleProducto(producto)}
-                              mode="android"
-                              position="leading"
-                              labelStyle={[
-                                styles.checkboxLabel,
-                                {
-                                  color: checked
-                                    ? theme.colors.onSurface
-                                    : theme.colors.onSurfaceVariant,
-                                },
-                              ]}
-                              color={theme.colors.primary}
-                              uncheckedColor={theme.colors.onSurfaceVariant}
+                            <View
                               style={[
-                                styles.checkboxItem,
+                                styles.productRow,
                                 checked && {
                                   backgroundColor:
                                     theme.colors.primary + "10",
                                 },
                               ]}
-                            />
+                            >
+                              <TouchableOpacity
+                                activeOpacity={0.75}
+                                onPress={() => toggleProducto(producto)}
+                                style={styles.productCheckBox}
+                              >
+                                <Checkbox.Android
+                                  status={checked ? "checked" : "unchecked"}
+                                  color={theme.colors.primary}
+                                  uncheckedColor={theme.colors.onSurfaceVariant}
+                                />
+                              </TouchableOpacity>
+
+                              <TouchableOpacity
+                                activeOpacity={0.75}
+                                onPress={() => toggleProducto(producto)}
+                                style={styles.productNameBox}
+                              >
+                                <Text
+                                  variant="bodyMedium"
+                                  numberOfLines={2}
+                                  style={[
+                                    styles.checkboxLabel,
+                                    {
+                                      color: checked
+                                        ? theme.colors.onSurface
+                                        : theme.colors.onSurfaceVariant,
+                                    },
+                                  ]}
+                                >
+                                  {producto}
+                                </Text>
+                              </TouchableOpacity>
+
+                              <View
+                                style={[
+                                  styles.counterBox,
+                                  {
+                                    backgroundColor: checked
+                                      ? theme.colors.primary + "14"
+                                      : theme.colors.onSurfaceVariant + "10",
+                                    borderColor: checked
+                                      ? theme.colors.primary + "28"
+                                      : theme.colors.outline + "45",
+                                    opacity: checked ? 1 : 0.5,
+                                  },
+                                ]}
+                              >
+                                <TouchableOpacity
+                                  activeOpacity={0.75}
+                                  onPress={() => disminuirCantidad(producto)}
+                                  disabled={!checked || cantidad <= 0}
+                                  style={[
+                                    styles.counterButton,
+                                    {
+                                      opacity:
+                                        !checked || cantidad <= 0 ? 0.35 : 1,
+                                    },
+                                  ]}
+                                >
+                                  <MaterialCommunityIcons
+                                    name="minus"
+                                    size={17}
+                                    color={
+                                      checked
+                                        ? theme.colors.primary
+                                        : theme.colors.onSurfaceVariant
+                                    }
+                                  />
+                                </TouchableOpacity>
+
+                                <Text
+                                  style={[
+                                    styles.counterText,
+                                    {
+                                      color: checked
+                                        ? theme.colors.onSurface
+                                        : theme.colors.onSurfaceVariant,
+                                    },
+                                  ]}
+                                >
+                                  {cantidad}
+                                </Text>
+
+                                <TouchableOpacity
+                                  activeOpacity={0.75}
+                                  onPress={() => aumentarCantidad(producto)}
+                                  style={styles.counterButton}
+                                >
+                                  <MaterialCommunityIcons
+                                    name="plus"
+                                    size={17}
+                                    color={
+                                      checked
+                                        ? theme.colors.primary
+                                        : theme.colors.onSurfaceVariant
+                                    }
+                                  />
+                                </TouchableOpacity>
+                              </View>
+                            </View>
 
                             {index < categoria.productos.length - 1 && (
                               <Divider
@@ -612,7 +798,7 @@ export default function MercadoScreen() {
             <Button
               mode="outlined"
               onPress={limpiarSeleccion}
-              disabled={productosSeleccionados.length === 0 || loading}
+              disabled={productosSeleccionadosArray.length === 0 || loading}
               style={[
                 styles.secondaryButton,
                 {
@@ -708,6 +894,10 @@ export default function MercadoScreen() {
           const productosAgrupados =
             agruparProductosPorCategoria(productosPedido);
 
+          const cantidadTotalPedido = productosPedido
+            .map(normalizarProducto)
+            .reduce((total, producto) => total + producto.cantidad, 0);
+
           return (
             <Card
               key={pedido.id}
@@ -764,7 +954,10 @@ export default function MercadoScreen() {
                       fontWeight: "900",
                     }}
                   >
-                    {pedido.cantidadProductos || productosPedido.length || 0}
+                    {cantidadTotalPedido ||
+                      pedido.cantidadProductos ||
+                      productosPedido.length ||
+                      0}
                   </Chip>
                 </View>
 
@@ -788,12 +981,14 @@ export default function MercadoScreen() {
                     <View style={styles.historyProducts}>
                       {categoria.productos.map((producto) => (
                         <Chip
-                          key={`${pedido.id}-${producto}`}
+                          key={`${pedido.id}-${producto.nombre}`}
                           compact
                           style={[styles.productChip, getHistoryChipStyle()]}
                           textStyle={getHistoryChipTextStyle()}
                         >
-                          {producto}
+                          {producto.cantidad > 0
+                            ? `${producto.cantidad} ${producto.nombre}`
+                            : producto.nombre}
                         </Chip>
                       ))}
                     </View>
@@ -918,14 +1113,53 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     overflow: "hidden",
   },
-  checkboxItem: {
-    paddingVertical: 2,
-    paddingRight: 12,
+
+  productRow: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingRight: 10,
+  },
+  productCheckBox: {
+    width: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  productNameBox: {
+    flex: 1,
+    minHeight: 42,
+    justifyContent: "center",
+    paddingRight: 8,
   },
   checkboxLabel: {
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: -0.1,
+    lineHeight: 19,
+  },
+
+  counterBox: {
+    height: 36,
+    minWidth: 96,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    overflow: "hidden",
+  },
+  counterButton: {
+    width: 31,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  counterText: {
+    minWidth: 24,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "900",
   },
 
   previewBox: {

@@ -2,7 +2,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Alert,
+    KeyboardAvoidingView,
     Linking,
+    Platform,
     RefreshControl,
     ScrollView,
     StyleSheet,
@@ -297,446 +299,240 @@ const DIAS_SEMANA = [
         mercadoPagoNumber;
 
     return (
-        <ScrollView
+        <KeyboardAvoidingView
         style={[
-            styles.container,
+            styles.keyboardContainer,
             {
             backgroundColor: theme.colors.background,
             },
         ]}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-            <RefreshControl
-            refreshing={cargando}
-            onRefresh={cargarHistorial}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-            />
-        }
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-        <View style={styles.header}>
-            <View style={styles.headerTitleBox}>
-            <View
-                style={[
-                styles.headerIcon,
-                {
-                    backgroundColor: theme.colors.primary + "18",
-                },
-                ]}
-            >
-                <MaterialCommunityIcons
-                name="cash-register"
-                size={24}
-                color={theme.colors.primary}
-                />
-            </View>
-
-            <Text
-                variant="headlineMedium"
-                style={[
-                styles.title,
-                {
-                    color: theme.colors.onSurface,
-                },
-                ]}
-            >
-                Caja
-            </Text>
-            </View>
-
-            <Text
-            variant="bodyLarge"
+        <ScrollView
             style={[
-                styles.subtitle,
-                {
-                color: theme.colors.onSurfaceVariant,
-                },
-            ]}
-            >
-            Cargá el cierre de caja y envialo por WhatsApp.
-            </Text>
-        </View>
-
-        <Card
-            mode="contained"
-            style={[
-            styles.summaryCard,
+            styles.container,
             {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.outline + "55",
+                backgroundColor: theme.colors.background,
             },
             ]}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            refreshControl={
+            <RefreshControl
+                refreshing={cargando}
+                onRefresh={cargarHistorial}
+                tintColor={theme.colors.primary}
+                colors={[theme.colors.primary]}
+            />
+            }
         >
+            <View style={styles.header}>
+            <View style={styles.headerTitleBox}>
+                <View
+                style={[
+                    styles.headerIcon,
+                    {
+                    backgroundColor: theme.colors.primary + "18",
+                    },
+                ]}
+                >
+                <MaterialCommunityIcons
+                    name="cash-register"
+                    size={24}
+                    color={theme.colors.primary}
+                />
+                </View>
+
+                <Text
+                variant="headlineMedium"
+                style={[
+                    styles.title,
+                    {
+                    color: theme.colors.onSurface,
+                    },
+                ]}
+                >
+                Caja
+                </Text>
+            </View>
+
+            <Text
+                variant="bodyLarge"
+                style={[
+                styles.subtitle,
+                {
+                    color: theme.colors.onSurfaceVariant,
+                },
+                ]}
+            >
+                Cargá el cierre de caja y envialo por WhatsApp.
+            </Text>
+            </View>
+
+            <Card
+            mode="contained"
+            style={[
+                styles.summaryCard,
+                {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+                },
+            ]}
+            >
             <Card.Content style={styles.summaryContent}>
-            <View style={styles.summaryHeader}>
+                <View style={styles.summaryHeader}>
                 <View style={styles.summaryTextBox}>
+                    <Text
+                    variant="bodyMedium"
+                    style={[
+                        styles.summaryLabel,
+                        {
+                        color: theme.colors.onSurfaceVariant,
+                        },
+                    ]}
+                    >
+                    Total informado
+                    </Text>
+
+                    <Text
+                    variant="headlineMedium"
+                    style={[
+                        styles.amount,
+                        {
+                        color: theme.colors.primary,
+                        },
+                    ]}
+                    >
+                    ${formatearMonto(totalInformado)}
+                    </Text>
+                </View>
+
+                <View
+                    style={[
+                    styles.dayPill,
+                    {
+                        backgroundColor: esDomingo
+                        ? theme.colors.secondary + "16"
+                        : theme.colors.primary + "16",
+                        borderColor: esDomingo
+                        ? theme.colors.secondary + "32"
+                        : theme.colors.primary + "32",
+                    },
+                    ]}
+                >
+                    <View
+                    style={[
+                        styles.dayIconBox,
+                        {
+                        backgroundColor: esDomingo
+                            ? theme.colors.secondary + "18"
+                            : theme.colors.primary + "18",
+                        },
+                    ]}
+                    >
+                    <MaterialCommunityIcons
+                        name={esDomingo ? "weather-sunset" : "calendar-check"}
+                        size={18}
+                        color={
+                        esDomingo ? theme.colors.secondary : theme.colors.primary
+                        }
+                    />
+                    </View>
+
+                    <View style={styles.dayTextBox}>
+                    <Text
+                        style={[
+                        styles.dayName,
+                        {
+                            color: esDomingo
+                            ? theme.colors.secondary
+                            : theme.colors.primary,
+                        },
+                        ]}
+                        numberOfLines={1}
+                    >
+                        {esDomingo ? "Domingo" : diaNombre}
+                    </Text>
+
+                    <Text
+                        style={[
+                        styles.dayDate,
+                        {
+                            color: theme.colors.onSurfaceVariant,
+                        },
+                        ]}
+                        numberOfLines={1}
+                    >
+                        {formatearFechaVisible(fecha)}
+                    </Text>
+                    </View>
+                </View>
+                </View>
+
+                <View
+                style={[
+                    styles.formatBox,
+                    {
+                    backgroundColor: theme.dark
+                        ? theme.colors.background + "90"
+                        : theme.colors.primary + "0C",
+                    borderColor: theme.colors.primary + "18",
+                    },
+                ]}
+                >
+                <MaterialCommunityIcons
+                    name="information-outline"
+                    size={18}
+                    color={theme.colors.primary}
+                />
+
                 <Text
                     variant="bodyMedium"
                     style={[
-                    styles.summaryLabel,
+                    styles.formatText,
                     {
                         color: theme.colors.onSurfaceVariant,
                     },
                     ]}
                 >
-                    Total informado
-                </Text>
-
-                <Text
-                    variant="headlineMedium"
-                    style={[
-                    styles.amount,
-                    {
-                        color: theme.colors.primary,
-                    },
-                    ]}
-                >
-                    ${formatearMonto(totalInformado)}
+                    {esDomingo
+                    ? "Formato domingo: sin caja final, pero podés cargar anotados y pagos si hace falta."
+                    : "Formato día normal: incluye caja final, anotados y pagos si hay."}
                 </Text>
                 </View>
+            </Card.Content>
+            </Card>
 
-                <View
-                style={[
-                    styles.dayPill,
-                    {
-                    backgroundColor: esDomingo
-                        ? theme.colors.secondary + "16"
-                        : theme.colors.primary + "16",
-                    borderColor: esDomingo
-                        ? theme.colors.secondary + "32"
-                        : theme.colors.primary + "32",
-                    },
-                ]}
-                >
+            <Card
+            mode="contained"
+            style={[
+                styles.formCard,
+                {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+                },
+            ]}
+            >
+            <Card.Content style={styles.formContent}>
+                <View style={styles.sectionHeader}>
                 <View
                     style={[
-                    styles.dayIconBox,
+                    styles.sectionIcon,
                     {
-                        backgroundColor: esDomingo
-                        ? theme.colors.secondary + "18"
-                        : theme.colors.primary + "18",
+                        backgroundColor: theme.colors.primary + "14",
                     },
                     ]}
                 >
                     <MaterialCommunityIcons
-                    name={esDomingo ? "weather-sunset" : "calendar-check"}
-                    size={18}
-                    color={esDomingo ? theme.colors.secondary : theme.colors.primary}
-                    />
-                </View>
-
-                <View style={styles.dayTextBox}>
-                    <Text
-                    style={[
-                        styles.dayName,
-                        {
-                        color: esDomingo
-                            ? theme.colors.secondary
-                            : theme.colors.primary,
-                        },
-                    ]}
-                    numberOfLines={1}
-                    >
-                    {esDomingo ? "Domingo" : diaNombre}
-                    </Text>
-
-                    <Text
-                    style={[
-                        styles.dayDate,
-                        {
-                        color: theme.colors.onSurfaceVariant,
-                        },
-                    ]}
-                    numberOfLines={1}
-                    >
-                    {formatearFechaVisible(fecha)}
-                    </Text>
-                </View>
-                </View>
-            </View>
-
-            <View
-                style={[
-                styles.formatBox,
-                {
-                    backgroundColor: theme.dark
-                    ? theme.colors.background + "90"
-                    : theme.colors.primary + "0C",
-                    borderColor: theme.colors.primary + "18",
-                },
-                ]}
-            >
-                <MaterialCommunityIcons
-                name="information-outline"
-                size={18}
-                color={theme.colors.primary}
-                />
-
-                <Text
-                variant="bodyMedium"
-                style={[
-                    styles.formatText,
-                    {
-                    color: theme.colors.onSurfaceVariant,
-                    },
-                ]}
-                >
-                {esDomingo
-                    ? "Formato domingo: sin caja final, pero podés cargar anotados y pagos si hace falta."
-                    : "Formato día normal: incluye caja final, anotados y pagos si hay."}
-                </Text>
-            </View>
-            </Card.Content>
-        </Card>
-
-        <Card
-            mode="contained"
-            style={[
-            styles.formCard,
-            {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.outline + "55",
-            },
-            ]}
-        >
-            <Card.Content style={styles.formContent}>
-            <View style={styles.sectionHeader}>
-                <View
-                style={[
-                    styles.sectionIcon,
-                    {
-                    backgroundColor: theme.colors.primary + "14",
-                    },
-                ]}
-                >
-                <MaterialCommunityIcons
                     name="clipboard-text-outline"
                     size={20}
                     color={theme.colors.primary}
-                />
+                    />
                 </View>
 
-                <Text
-                variant="titleLarge"
-                style={[
-                    styles.cardTitle,
-                    {
-                    color: theme.colors.onSurface,
-                    },
-                ]}
-                >
-                Datos del cierre
-                </Text>
-            </View>
-
-            <TextInput
-                label="Fecha"
-                value={fecha}
-                onChangeText={setFecha}
-                mode="outlined"
-                placeholder="YYYY-MM-DD"
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-            />
-
-            <TextInput
-                label="ID caja"
-                value={idCaja}
-                onChangeText={setIdCaja}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 1024"
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-            />
-
-            <View style={styles.grid}>
-                <TextInput
-                label="Efectivo"
-                value={efectivo}
-                onChangeText={setEfectivo}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 420000"
-                style={styles.gridInput}
-                outlineStyle={styles.inputOutline}
-                />
-
-                <TextInput
-                label="Caja tarde"
-                value={cajaTarde}
-                onChangeText={setCajaTarde}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 30400"
-                style={styles.gridInput}
-                outlineStyle={styles.inputOutline}
-                />
-            </View>
-
-            {!esDomingo && (
-                <TextInput
-                label="Caja final"
-                value={cajaFinal}
-                onChangeText={setCajaFinal}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 26700"
-                style={styles.input}
-                outlineStyle={styles.inputOutline}
-                />
-            )}
-
-            <View style={styles.grid}>
-                <TextInput
-                label="Posnet"
-                value={posnet}
-                onChangeText={setPosnet}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 221170"
-                style={styles.gridInput}
-                outlineStyle={styles.inputOutline}
-                />
-
-                <TextInput
-                label="Mercado Pago"
-                value={mercadoPago}
-                onChangeText={setMercadoPago}
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 655530"
-                style={styles.gridInput}
-                outlineStyle={styles.inputOutline}
-                />
-            </View>
-
-            <TextInput
-                label="Anotados"
-                value={anotados}
-                onChangeText={setAnotados}
-                mode="outlined"
-                multiline
-                placeholder={"Ej:\naure: 26300\njose: 9900"}
-                style={styles.textArea}
-                outlineStyle={styles.inputOutline}
-            />
-
-            <TextInput
-                label="Pagos"
-                value={pagos}
-                onChangeText={setPagos}
-                mode="outlined"
-                multiline
-                placeholder={"Ej:\n40000 tortitas (caja)\n141000 tony (caja)"}
-                style={styles.textArea}
-                outlineStyle={styles.inputOutline}
-            />
-
-            <View
-                style={[
-                styles.previewBox,
-                {
-                    backgroundColor: theme.colors.primary + "0F",
-                    borderColor: theme.colors.primary + "22",
-                },
-                ]}
-            >
-                <View style={styles.previewHeader}>
-                <MaterialCommunityIcons
-                    name="message-text-outline"
-                    size={18}
-                    color={theme.colors.primary}
-                />
-
-                <Text
-                    variant="titleSmall"
-                    style={[
-                    styles.previewTitle,
-                    {
-                        color: theme.colors.primary,
-                    },
-                    ]}
-                >
-                    Vista previa
-                </Text>
-                </View>
-
-                <Text
-                variant="bodyMedium"
-                style={[
-                    styles.previewText,
-                    {
-                    color: theme.colors.onSurfaceVariant,
-                    },
-                ]}
-                >
-                {mensajeCaja}
-                </Text>
-            </View>
-
-            <View style={styles.actions}>
-                <Button
-                mode="outlined"
-                onPress={limpiarFormulario}
-                disabled={enviando}
-                style={[
-                    styles.actionButton,
-                    {
-                    borderColor: theme.colors.outline + "80",
-                    },
-                ]}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.buttonContent}
-                >
-                Limpiar
-                </Button>
-
-                <Button
-                mode="contained"
-                icon="whatsapp"
-                onPress={enviarCaja}
-                loading={enviando}
-                disabled={enviando}
-                style={styles.actionButton}
-                labelStyle={styles.buttonLabel}
-                contentStyle={styles.buttonContent}
-                >
-                Enviar
-                </Button>
-            </View>
-            </Card.Content>
-        </Card>
-
-        <Card
-            mode="contained"
-            style={[
-            styles.historyCard,
-            {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.outline + "55",
-            },
-            ]}
-        >
-            <Card.Content style={styles.historyContent}>
-            <View style={styles.sectionHeader}>
-                <View
-                style={[
-                    styles.sectionIcon,
-                    {
-                    backgroundColor: theme.colors.primary + "14",
-                    },
-                ]}
-                >
-                <MaterialCommunityIcons
-                    name="history"
-                    size={20}
-                    color={theme.colors.primary}
-                />
-                </View>
-
-                <View style={styles.sectionTextBox}>
                 <Text
                     variant="titleLarge"
                     style={[
@@ -746,188 +542,412 @@ const DIAS_SEMANA = [
                     },
                     ]}
                 >
-                    Historial
-                </Text>
-
-                <Text
-                    variant="bodyMedium"
-                    style={{
-                    color: theme.colors.onSurfaceVariant,
-                    }}
-                >
-                    Últimos cierres guardados.
+                    Datos del cierre
                 </Text>
                 </View>
-            </View>
 
-            {historial.length === 0 ? (
+                <TextInput
+                label="Fecha"
+                value={fecha}
+                onChangeText={setFecha}
+                mode="outlined"
+                placeholder="YYYY-MM-DD"
+                style={styles.input}
+                outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                label="ID caja"
+                value={idCaja}
+                onChangeText={setIdCaja}
+                keyboardType="numeric"
+                mode="outlined"
+                placeholder="Ej: 1024"
+                style={styles.input}
+                outlineStyle={styles.inputOutline}
+                />
+
+                <View style={styles.grid}>
+                <TextInput
+                    label="Efectivo"
+                    value={efectivo}
+                    onChangeText={setEfectivo}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    placeholder="Ej: 420000"
+                    style={styles.gridInput}
+                    outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                    label="Caja tarde"
+                    value={cajaTarde}
+                    onChangeText={setCajaTarde}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    placeholder="Ej: 30400"
+                    style={styles.gridInput}
+                    outlineStyle={styles.inputOutline}
+                />
+                </View>
+
+                {!esDomingo && (
+                <TextInput
+                    label="Caja final"
+                    value={cajaFinal}
+                    onChangeText={setCajaFinal}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    placeholder="Ej: 26700"
+                    style={styles.input}
+                    outlineStyle={styles.inputOutline}
+                />
+                )}
+
+                <View style={styles.grid}>
+                <TextInput
+                    label="Posnet"
+                    value={posnet}
+                    onChangeText={setPosnet}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    placeholder="Ej: 221170"
+                    style={styles.gridInput}
+                    outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                    label="Mercado Pago"
+                    value={mercadoPago}
+                    onChangeText={setMercadoPago}
+                    keyboardType="numeric"
+                    mode="outlined"
+                    placeholder="Ej: 655530"
+                    style={styles.gridInput}
+                    outlineStyle={styles.inputOutline}
+                />
+                </View>
+
+                <TextInput
+                label="Anotados"
+                value={anotados}
+                onChangeText={setAnotados}
+                mode="outlined"
+                multiline
+                placeholder={"Ej:\naure: 26300\njose: 9900"}
+                style={styles.textArea}
+                outlineStyle={styles.inputOutline}
+                />
+
+                <TextInput
+                label="Pagos"
+                value={pagos}
+                onChangeText={setPagos}
+                mode="outlined"
+                multiline
+                placeholder={"Ej:\n40000 tortitas (caja)\n141000 tony (caja)"}
+                style={styles.textArea}
+                outlineStyle={styles.inputOutline}
+                />
+
                 <View
                 style={[
-                    styles.emptyBox,
+                    styles.previewBox,
                     {
-                    backgroundColor: theme.dark
-                        ? theme.colors.background + "90"
-                        : theme.colors.primary + "08",
-                    borderColor: theme.colors.outline + "45",
+                    backgroundColor: theme.colors.primary + "0F",
+                    borderColor: theme.colors.primary + "22",
                     },
                 ]}
                 >
+                <View style={styles.previewHeader}>
+                    <MaterialCommunityIcons
+                    name="message-text-outline"
+                    size={18}
+                    color={theme.colors.primary}
+                    />
+
+                    <Text
+                    variant="titleSmall"
+                    style={[
+                        styles.previewTitle,
+                        {
+                        color: theme.colors.primary,
+                        },
+                    ]}
+                    >
+                    Vista previa
+                    </Text>
+                </View>
+
+                <Text
+                    variant="bodyMedium"
+                    style={[
+                    styles.previewText,
+                    {
+                        color: theme.colors.onSurfaceVariant,
+                    },
+                    ]}
+                >
+                    {mensajeCaja}
+                </Text>
+                </View>
+
+                <View style={styles.actions}>
+                <Button
+                    mode="outlined"
+                    onPress={limpiarFormulario}
+                    disabled={enviando}
+                    style={[
+                    styles.actionButton,
+                    {
+                        borderColor: theme.colors.outline + "80",
+                    },
+                    ]}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.buttonContent}
+                >
+                    Limpiar
+                </Button>
+
+                <Button
+                    mode="contained"
+                    icon="whatsapp"
+                    onPress={enviarCaja}
+                    loading={enviando}
+                    disabled={enviando}
+                    style={styles.actionButton}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.buttonContent}
+                >
+                    Enviar
+                </Button>
+                </View>
+            </Card.Content>
+            </Card>
+
+            <Card
+            mode="contained"
+            style={[
+                styles.historyCard,
+                {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+                },
+            ]}
+            >
+            <Card.Content style={styles.historyContent}>
+                <View style={styles.sectionHeader}>
                 <View
                     style={[
-                    styles.emptyIcon,
+                    styles.sectionIcon,
                     {
                         backgroundColor: theme.colors.primary + "14",
                     },
                     ]}
                 >
                     <MaterialCommunityIcons
-                    name="cash-clock"
-                    size={24}
+                    name="history"
+                    size={20}
                     color={theme.colors.primary}
                     />
                 </View>
 
-                <Text
-                    variant="bodyMedium"
+                <View style={styles.sectionTextBox}>
+                    <Text
+                    variant="titleLarge"
                     style={[
-                    styles.emptyText,
-                    {
-                        color: theme.colors.onSurfaceVariant,
-                    },
+                        styles.cardTitle,
+                        {
+                        color: theme.colors.onSurface,
+                        },
                     ]}
-                >
-                    Todavía no hay cierres guardados.
-                </Text>
+                    >
+                    Historial
+                    </Text>
+
+                    <Text
+                    variant="bodyMedium"
+                    style={{
+                        color: theme.colors.onSurfaceVariant,
+                    }}
+                    >
+                    Últimos cierres guardados.
+                    </Text>
                 </View>
-            ) : (
-                historial.map((item) => (
+                </View>
+
+                {historial.length === 0 ? (
                 <View
-                    key={item.id}
                     style={[
-                    styles.historyItem,
+                    styles.emptyBox,
                     {
                         backgroundColor: theme.dark
                         ? theme.colors.background + "90"
-                        : theme.colors.primary + "07",
+                        : theme.colors.primary + "08",
                         borderColor: theme.colors.outline + "45",
                     },
                     ]}
                 >
-                    <View style={styles.historyTop}>
-                    <View style={styles.historyText}>
-                        <Text
-                        variant="titleSmall"
-                        style={[
-                            styles.historyTitle,
-                            {
-                            color: theme.colors.onSurface,
-                            },
-                        ]}
-                        >
-                        Caja #{item.idCaja} · {item.diaNombre}
-                        </Text>
-
-                        <Text
-                        variant="bodySmall"
-                        style={{
-                            color: theme.colors.onSurfaceVariant,
-                        }}
-                        >
-                        {formatearFechaVisible(item.fecha)}
-                        </Text>
-                    </View>
-
-                    <Chip
-                        compact
-                        style={[
-                        styles.historyStatusChip,
-                        {
-                            backgroundColor: item.esDomingo
-                            ? theme.colors.secondary + "18"
-                            : theme.colors.primary + "18",
-                        },
-                        ]}
-                        textStyle={{
-                        color: item.esDomingo
-                            ? theme.colors.secondary
-                            : theme.colors.primary,
-                        fontWeight: "900",
-                        }}
-                    >
-                        {item.esDomingo ? "Domingo" : "Normal"}
-                    </Chip>
-                    </View>
-
-                    <Divider
-                    style={[
-                        styles.historyDivider,
-                        {
-                        backgroundColor: theme.colors.outline + "30",
-                        },
-                    ]}
-                    />
-
                     <View
                     style={[
-                        styles.sentMessageBox,
+                        styles.emptyIcon,
+                        {
+                        backgroundColor: theme.colors.primary + "14",
+                        },
+                    ]}
+                    >
+                    <MaterialCommunityIcons
+                        name="cash-clock"
+                        size={24}
+                        color={theme.colors.primary}
+                    />
+                    </View>
+
+                    <Text
+                    variant="bodyMedium"
+                    style={[
+                        styles.emptyText,
+                        {
+                        color: theme.colors.onSurfaceVariant,
+                        },
+                    ]}
+                    >
+                    Todavía no hay cierres guardados.
+                    </Text>
+                </View>
+                ) : (
+                historial.map((item) => (
+                    <View
+                    key={item.id}
+                    style={[
+                        styles.historyItem,
                         {
                         backgroundColor: theme.dark
-                            ? theme.colors.surface + "65"
-                            : "#ffffff99",
+                            ? theme.colors.background + "90"
+                            : theme.colors.primary + "07",
                         borderColor: theme.colors.outline + "45",
                         },
                     ]}
                     >
-                    <View style={styles.sentMessageHeader}>
-                        <MaterialCommunityIcons
-                        name="message-text-outline"
-                        size={18}
-                        color={theme.colors.primary}
-                        />
+                    <View style={styles.historyTop}>
+                        <View style={styles.historyText}>
+                        <Text
+                            variant="titleSmall"
+                            style={[
+                            styles.historyTitle,
+                            {
+                                color: theme.colors.onSurface,
+                            },
+                            ]}
+                        >
+                            Caja #{item.idCaja} · {item.diaNombre}
+                        </Text>
 
                         <Text
-                        variant="titleSmall"
+                            variant="bodySmall"
+                            style={{
+                            color: theme.colors.onSurfaceVariant,
+                            }}
+                        >
+                            {formatearFechaVisible(item.fecha)}
+                        </Text>
+                        </View>
+
+                        <Chip
+                        compact
                         style={[
-                            styles.sentMessageTitle,
+                            styles.historyStatusChip,
                             {
-                            color: theme.colors.primary,
+                            backgroundColor: item.esDomingo
+                                ? theme.colors.secondary + "18"
+                                : theme.colors.primary + "18",
                             },
                         ]}
+                        textStyle={{
+                            color: item.esDomingo
+                            ? theme.colors.secondary
+                            : theme.colors.primary,
+                            fontWeight: "900",
+                        }}
                         >
-                        Información enviada
-                        </Text>
+                        {item.esDomingo ? "Domingo" : "Normal"}
+                        </Chip>
                     </View>
 
-                    <Text
-                        variant="bodyMedium"
+                    <Divider
                         style={[
-                        styles.sentMessageText,
+                        styles.historyDivider,
                         {
-                            color: theme.colors.onSurfaceVariant,
+                            backgroundColor: theme.colors.outline + "30",
+                        },
+                        ]}
+                    />
+
+                    <View
+                        style={[
+                        styles.sentMessageBox,
+                        {
+                            backgroundColor: theme.dark
+                            ? theme.colors.surface + "65"
+                            : "#ffffff99",
+                            borderColor: theme.colors.outline + "45",
                         },
                         ]}
                     >
+                        <View style={styles.sentMessageHeader}>
+                        <MaterialCommunityIcons
+                            name="message-text-outline"
+                            size={18}
+                            color={theme.colors.primary}
+                        />
+
+                        <Text
+                            variant="titleSmall"
+                            style={[
+                            styles.sentMessageTitle,
+                            {
+                                color: theme.colors.primary,
+                            },
+                            ]}
+                        >
+                            Información enviada
+                        </Text>
+                        </View>
+
+                        <Text
+                        variant="bodyMedium"
+                        style={[
+                            styles.sentMessageText,
+                            {
+                            color: theme.colors.onSurfaceVariant,
+                            },
+                        ]}
+                        >
                         {item.mensaje || "Sin mensaje guardado"}
-                    </Text>
+                        </Text>
                     </View>
-                </View>
+                    </View>
                 ))
-            )}
+                )}
             </Card.Content>
-        </Card>
+            </Card>
         </ScrollView>
+        </KeyboardAvoidingView>
     );
     }
 
     //Estilos:
     const styles = StyleSheet.create({
+    keyboardContainer: {
+        flex: 1,
+    },
     container: {
         flex: 1,
     },
     content: {
         padding: 20,
         paddingTop: 50,
-        paddingBottom: 120,
+        paddingBottom: 210,
     },
 
     header: {

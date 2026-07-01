@@ -2,6 +2,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -200,7 +202,7 @@ export default function CalculadoraScreen() {
   const mercaderiaConDescuento = mercaderiaDelMes / 1.2;
   const totalFinal = bruto - adelantoNumber - mercaderiaConDescuento;
 
-    const resultColor =
+  const resultColor =
     totalFinal >= 0 ? theme.colors.primary : theme.colors.error;
 
   const resultBackground =
@@ -483,7 +485,9 @@ export default function CalculadoraScreen() {
 
             <div class="card">
               <div class="label">Total final a cobrar</div>
-              <div class="value ${totalFinal < 0 ? "red" : ""}">$${formatearMonto(totalFinal)}</div>
+              <div class="value ${
+                totalFinal < 0 ? "red" : ""
+              }">$${formatearMonto(totalFinal)}</div>
             </div>
           </div>
 
@@ -582,749 +586,241 @@ export default function CalculadoraScreen() {
   };
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={[
-        styles.container,
+        styles.keyboardContainer,
         {
           backgroundColor: theme.colors.background,
         },
       ]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={cargando}
-          onRefresh={cargarHoras}
-          tintColor={theme.colors.primary}
-          colors={[theme.colors.primary]}
-        />
-      }
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <View style={styles.header}>
-        <View style={styles.headerTitleBox}>
-          <View
-            style={[
-              styles.headerIcon,
-              {
-                backgroundColor: theme.colors.primary + "18",
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="calculator"
-              size={24}
-              color={theme.colors.primary}
-            />
+      <ScrollView
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        refreshControl={
+          <RefreshControl
+            refreshing={cargando}
+            onRefresh={cargarHoras}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTitleBox}>
+            <View
+              style={[
+                styles.headerIcon,
+                {
+                  backgroundColor: theme.colors.primary + "18",
+                },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="calculator"
+                size={24}
+                color={theme.colors.primary}
+              />
+            </View>
+
+            <Text
+              variant="headlineMedium"
+              style={[
+                styles.title,
+                {
+                  color: theme.colors.onSurface,
+                },
+              ]}
+            >
+              Calculadora
+            </Text>
           </View>
 
           <Text
-            variant="headlineMedium"
+            variant="bodyLarge"
             style={[
-              styles.title,
+              styles.subtitle,
               {
-                color: theme.colors.onSurface,
+                color: theme.colors.onSurfaceVariant,
               },
             ]}
           >
-            Calculadora
+            Calculá cuánto cobrás por mes usando las horas, mercadería diaria y
+            adelantos.
           </Text>
         </View>
 
-        <Text
-          variant="bodyLarge"
+        <Card
+          mode="contained"
           style={[
-            styles.subtitle,
+            styles.card,
             {
-              color: theme.colors.onSurfaceVariant,
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outline + "55",
             },
           ]}
         >
-          Calculá cuánto cobrás por mes usando las horas, mercadería diaria y
-          adelantos.
-        </Text>
-      </View>
-
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.outline + "55",
-          },
-        ]}
-      >
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.monthHeader}>
-            <View style={styles.monthHeaderText}>
-              <Text
-                variant="titleLarge"
-                style={[
-                  styles.cardTitle,
-                  {
-                    color: theme.colors.onSurface,
-                  },
-                ]}
-              >
-                Mes a calcular
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Seleccioná el mes para traer sus horas y mercadería.
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.statusPill,
-                {
-                  backgroundColor: saldado
-                    ? theme.colors.primary + "16"
-                    : theme.colors.secondary + "16",
-                  borderColor: saldado
-                    ? theme.colors.primary + "35"
-                    : theme.colors.secondary + "35",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={saldado ? "check-circle-outline" : "clock-outline"}
-                size={17}
-                color={saldado ? theme.colors.primary : theme.colors.secondary}
-              />
-
-              <Text
-                style={[
-                  styles.statusText,
-                  {
-                    color: saldado
-                      ? theme.colors.primary
-                      : theme.colors.secondary,
-                  },
-                ]}
-              >
-                {saldado ? "Saldado" : "Pendiente"}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.selectorRow}>
-            <Menu
-              visible={menuMesVisible}
-              onDismiss={() => setMenuMesVisible(false)}
-              anchor={
-                <Button
-                  mode="outlined"
-                  icon="calendar-month"
-                  onPress={() => setMenuMesVisible(true)}
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.monthHeader}>
+              <View style={styles.monthHeaderText}>
+                <Text
+                  variant="titleLarge"
                   style={[
-                    styles.monthButton,
+                    styles.cardTitle,
                     {
-                      borderColor: theme.colors.outline + "80",
+                      color: theme.colors.onSurface,
                     },
                   ]}
-                  labelStyle={styles.buttonLabel}
-                  contentStyle={styles.selectorButtonContent}
                 >
-                  {mesActual?.label || "Mes"}
-                </Button>
-              }
-            >
-              {MESES.map((mes) => (
-                <Menu.Item
-                  key={mes.value}
-                  onPress={() => {
-                    setMesSeleccionado(mes.value);
-                    setMenuMesVisible(false);
+                  Mes a calcular
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
                   }}
-                  title={mes.label}
-                />
-              ))}
-            </Menu>
+                >
+                  Seleccioná el mes para traer sus horas y mercadería.
+                </Text>
+              </View>
 
-            <View
-              style={[
-                styles.yearBox,
-                {
-                  borderColor: theme.colors.outline + "55",
-                  backgroundColor: theme.dark
-                    ? theme.colors.background + "90"
-                    : theme.colors.primary + "07",
-                },
-              ]}
-            >
-              <IconButton
-                icon="chevron-left"
-                size={22}
-                iconColor={theme.colors.onSurfaceVariant}
-                onPress={() => cambiarAnio("prev")}
-              />
-
-              <Text
-                variant="titleMedium"
-                style={[
-                  styles.yearText,
-                  {
-                    color: theme.colors.onSurface,
-                  },
-                ]}
-              >
-                {anioSeleccionado}
-              </Text>
-
-              <IconButton
-                icon="chevron-right"
-                size={22}
-                iconColor={theme.colors.onSurfaceVariant}
-                onPress={() => cambiarAnio("next")}
-              />
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
-
-      <View style={styles.summaryRow}>
-        <Card
-          mode="contained"
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.outline + "55",
-            },
-          ]}
-        >
-          <Card.Content style={styles.summaryContent}>
-            <View
-              style={[
-                styles.summaryIcon,
-                {
-                  backgroundColor: theme.colors.primary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="clock-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </View>
-
-            <Text
-              variant="bodyMedium"
-              style={[
-                styles.summaryLabel,
-                {
-                  color: theme.colors.onSurfaceVariant,
-                },
-              ]}
-            >
-              Horas del mes
-            </Text>
-
-            <Text
-              variant="headlineSmall"
-              style={[
-                styles.summaryNumber,
-                {
-                  color: theme.colors.primary,
-                },
-              ]}
-            >
-              {formatearHoras(horasDelMes)} h
-            </Text>
-          </Card.Content>
-        </Card>
-
-        <Card
-          mode="contained"
-          style={[
-            styles.summaryCard,
-            {
-              backgroundColor: theme.colors.surface,
-              borderColor: theme.colors.outline + "55",
-            },
-          ]}
-        >
-          <Card.Content style={styles.summaryContent}>
-            <View
-              style={[
-                styles.summaryIcon,
-                {
-                  backgroundColor: theme.colors.secondary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="basket-outline"
-                size={20}
-                color={theme.colors.secondary}
-              />
-            </View>
-
-            <Text
-              variant="bodyMedium"
-              style={[
-                styles.summaryLabel,
-                {
-                  color: theme.colors.onSurfaceVariant,
-                },
-              ]}
-            >
-              Mercadería
-            </Text>
-
-            <Text
-              variant="headlineSmall"
-              style={[
-                styles.summaryNumber,
-                {
-                  color: theme.colors.secondary,
-                },
-              ]}
-            >
-              ${formatearMonto(mercaderiaDelMes)}
-            </Text>
-          </Card.Content>
-        </Card>
-      </View>
-
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.outline + "55",
-          },
-        ]}
-      >
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.sectionHeader}>
-            <View
-              style={[
-                styles.sectionIcon,
-                {
-                  backgroundColor: theme.colors.primary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="clipboard-text-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </View>
-
-            <Text
-              variant="titleLarge"
-              style={[
-                styles.cardTitle,
-                {
-                  color: theme.colors.onSurface,
-                },
-              ]}
-            >
-              Datos del cálculo
-            </Text>
-          </View>
-
-          <TextInput
-            label="Valor de mi hora"
-            value={valorHora}
-            onChangeText={setValorHora}
-            keyboardType="numeric"
-            mode="outlined"
-            placeholder="Ej: 2500"
-            style={styles.input}
-            outlineStyle={styles.inputOutline}
-          />
-
-          <TextInput
-            label="Efectivo a descontar / adelanto"
-            value={adelanto}
-            onChangeText={setAdelanto}
-            keyboardType="numeric"
-            mode="outlined"
-            placeholder="Ej: 20000"
-            style={styles.input}
-            outlineStyle={styles.inputOutline}
-          />
-
-          <View
-            style={[
-              styles.mercaderiaBox,
-              {
-                backgroundColor: theme.colors.secondary + "10",
-                borderColor: theme.colors.secondary + "30",
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.mercaderiaIcon,
-                {
-                  backgroundColor: theme.colors.secondary + "18",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="basket-outline"
-                size={24}
-                color={theme.colors.secondary}
-              />
-            </View>
-
-            <View style={styles.mercaderiaText}>
-              <Text
-                variant="titleSmall"
-                style={[
-                  styles.discountTitle,
-                  {
-                    color: theme.colors.secondary,
-                  },
-                ]}
-              >
-                Mercadería tomada desde Horas
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.mercaderiaLine,
-                  {
-                    color: theme.colors.onSurfaceVariant,
-                  },
-                ]}
-              >
-                Total cargado en el mes: ${formatearMonto(mercaderiaDelMes)}
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.mercaderiaLine,
-                  {
-                    color: theme.colors.onSurfaceVariant,
-                  },
-                ]}
-              >
-                Con descuento / 1.2: $
-                {formatearMonto(mercaderiaConDescuento)}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.resultBox,
-              {
-                backgroundColor: resultBackground,
-                borderColor: resultBorder,
-              },
-            ]}
-          >
-            <View style={styles.resultTextBox}>
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurface,
-                  fontWeight: "800",
-                }}
-              >
-                Total final a cobrar
-              </Text>
-
-              <Text
-                variant="headlineMedium"
-                style={[
-                  styles.totalFinal,
-                  {
-                    color: resultColor,
-                  },
-                ]}
-              >
-                ${formatearMonto(totalFinal)}
-              </Text>
-            </View>
-
-            <View
-              style={[
-                styles.resultIcon,
-                {
-                  backgroundColor: resultIconBackground,
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={totalFinal >= 0 ? "cash-check" : "alert-circle-outline"}
-                size={24}
-                color={resultColor}
-              />
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.breakdownBox,
-              {
-                backgroundColor: theme.dark
-                  ? theme.colors.background + "90"
-                  : theme.colors.primary + "07",
-                borderColor: theme.colors.outline + "45",
-              },
-            ]}
-          >
-            <View style={styles.breakdownRow}>
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Horas x valor hora
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.breakdownValue,
-                  {
-                    color: theme.colors.onSurface,
-                  },
-                ]}
-              >
-                ${formatearMonto(bruto)}
-              </Text>
-            </View>
-
-            <Divider
-              style={[
-                styles.breakdownDivider,
-                {
-                  backgroundColor: theme.colors.outline + "30",
-                },
-              ]}
-            />
-
-            <View style={styles.breakdownRow}>
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Adelanto
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.breakdownValue,
-                  {
-                    color: theme.colors.error,
-                  },
-                ]}
-              >
-                - ${formatearMonto(adelantoNumber)}
-              </Text>
-            </View>
-
-            <Divider
-              style={[
-                styles.breakdownDivider,
-                {
-                  backgroundColor: theme.colors.outline + "30",
-                },
-              ]}
-            />
-
-            <View style={styles.breakdownRow}>
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Mercadería con descuento
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={[
-                  styles.breakdownValue,
-                  {
-                    color: theme.colors.error,
-                  },
-                ]}
-              >
-                - ${formatearMonto(mercaderiaConDescuento)}
-              </Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.saldadoRow,
-              {
-                backgroundColor: saldado
-                  ? theme.colors.primary + "10"
-                  : theme.colors.secondary + "10",
-                borderColor: saldado
-                  ? theme.colors.primary + "25"
-                  : theme.colors.secondary + "25",
-              },
-            ]}
-          >
-            <View
-              style={[
-                styles.saldadoIcon,
-                {
-                  backgroundColor: saldado
-                    ? theme.colors.primary + "18"
-                    : theme.colors.secondary + "18",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={saldado ? "check-circle-outline" : "clock-outline"}
-                size={22}
-                color={saldado ? theme.colors.primary : theme.colors.secondary}
-              />
-            </View>
-
-            <View style={styles.saldadoText}>
-              <Text
-                variant="titleMedium"
-                style={[
-                  styles.saldadoTitle,
-                  {
-                    color: theme.colors.onSurface,
-                  },
-                ]}
-              >
-                Mes saldado
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Marcá esto cuando ya te hayan pagado este mes.
-              </Text>
-            </View>
-
-            <Switch value={saldado} onValueChange={cambiarSaldado} />
-          </View>
-
-          <View style={styles.actions}>
-            <Button
-              mode="outlined"
-              icon="file-pdf-box"
-              onPress={generarPdf}
-              loading={generandoPdf}
-              disabled={generandoPdf}
-              style={[
-                styles.pdfButton,
-                {
-                  borderColor: theme.colors.outline + "80",
-                },
-              ]}
-              labelStyle={styles.buttonLabel}
-              contentStyle={styles.actionButtonContent}
-            >
-              PDF
-            </Button>
-
-            <Button
-              mode="contained"
-              icon="content-save-outline"
-              onPress={guardarCalculo}
-              loading={guardando}
-              disabled={guardando}
-              style={styles.saveButton}
-              labelStyle={styles.buttonLabel}
-              contentStyle={styles.actionButtonContent}
-            >
-              Guardar
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
-
-      <Card
-        mode="contained"
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.outline + "55",
-          },
-        ]}
-      >
-        <Card.Content style={styles.cardContent}>
-          <View style={styles.sectionHeader}>
-            <View
-              style={[
-                styles.sectionIcon,
-                {
-                  backgroundColor: theme.colors.primary + "14",
-                },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="format-list-bulleted"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </View>
-
-            <View style={styles.sectionTextBox}>
-              <Text
-                variant="titleLarge"
-                style={[
-                  styles.cardTitle,
-                  {
-                    color: theme.colors.onSurface,
-                  },
-                ]}
-              >
-                Detalle usado
-              </Text>
-
-              <Text
-                variant="bodyMedium"
-                style={{
-                  color: theme.colors.onSurfaceVariant,
-                }}
-              >
-                Registros cargados en {mesActual?.label} {anioSeleccionado}.
-              </Text>
-            </View>
-          </View>
-
-          {registrosDelMes.length === 0 ? (
-            <View
-              style={[
-                styles.emptyBox,
-                {
-                  backgroundColor: theme.dark
-                    ? theme.colors.background + "90"
-                    : theme.colors.primary + "08",
-                  borderColor: theme.colors.outline + "45",
-                },
-              ]}
-            >
               <View
                 style={[
-                  styles.emptyIcon,
+                  styles.statusPill,
+                  {
+                    backgroundColor: saldado
+                      ? theme.colors.primary + "16"
+                      : theme.colors.secondary + "16",
+                    borderColor: saldado
+                      ? theme.colors.primary + "35"
+                      : theme.colors.secondary + "35",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={saldado ? "check-circle-outline" : "clock-outline"}
+                  size={17}
+                  color={
+                    saldado ? theme.colors.primary : theme.colors.secondary
+                  }
+                />
+
+                <Text
+                  style={[
+                    styles.statusText,
+                    {
+                      color: saldado
+                        ? theme.colors.primary
+                        : theme.colors.secondary,
+                    },
+                  ]}
+                >
+                  {saldado ? "Saldado" : "Pendiente"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.selectorRow}>
+              <Menu
+                visible={menuMesVisible}
+                onDismiss={() => setMenuMesVisible(false)}
+                anchor={
+                  <Button
+                    mode="outlined"
+                    icon="calendar-month"
+                    onPress={() => setMenuMesVisible(true)}
+                    style={[
+                      styles.monthButton,
+                      {
+                        borderColor: theme.colors.outline + "80",
+                      },
+                    ]}
+                    labelStyle={styles.buttonLabel}
+                    contentStyle={styles.selectorButtonContent}
+                  >
+                    {mesActual?.label || "Mes"}
+                  </Button>
+                }
+              >
+                {MESES.map((mes) => (
+                  <Menu.Item
+                    key={mes.value}
+                    onPress={() => {
+                      setMesSeleccionado(mes.value);
+                      setMenuMesVisible(false);
+                    }}
+                    title={mes.label}
+                  />
+                ))}
+              </Menu>
+
+              <View
+                style={[
+                  styles.yearBox,
+                  {
+                    borderColor: theme.colors.outline + "55",
+                    backgroundColor: theme.dark
+                      ? theme.colors.background + "90"
+                      : theme.colors.primary + "07",
+                  },
+                ]}
+              >
+                <IconButton
+                  icon="chevron-left"
+                  size={22}
+                  iconColor={theme.colors.onSurfaceVariant}
+                  onPress={() => cambiarAnio("prev")}
+                />
+
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.yearText,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  {anioSeleccionado}
+                </Text>
+
+                <IconButton
+                  icon="chevron-right"
+                  size={22}
+                  iconColor={theme.colors.onSurfaceVariant}
+                  onPress={() => cambiarAnio("next")}
+                />
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        <View style={styles.summaryRow}>
+          <Card
+            mode="contained"
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+              },
+            ]}
+          >
+            <Card.Content style={styles.summaryContent}>
+              <View
+                style={[
+                  styles.summaryIcon,
                   {
                     backgroundColor: theme.colors.primary + "14",
                   },
@@ -1332,7 +828,7 @@ export default function CalculadoraScreen() {
               >
                 <MaterialCommunityIcons
                   name="clock-outline"
-                  size={24}
+                  size={20}
                   color={theme.colors.primary}
                 />
               </View>
@@ -1340,127 +836,657 @@ export default function CalculadoraScreen() {
               <Text
                 variant="bodyMedium"
                 style={[
-                  styles.emptyText,
+                  styles.summaryLabel,
                   {
                     color: theme.colors.onSurfaceVariant,
                   },
                 ]}
               >
-                No hay registros cargados para este mes.
+                Horas del mes
+              </Text>
+
+              <Text
+                variant="headlineSmall"
+                style={[
+                  styles.summaryNumber,
+                  {
+                    color: theme.colors.primary,
+                  },
+                ]}
+              >
+                {formatearHoras(horasDelMes)} h
+              </Text>
+            </Card.Content>
+          </Card>
+
+          <Card
+            mode="contained"
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.outline + "55",
+              },
+            ]}
+          >
+            <Card.Content style={styles.summaryContent}>
+              <View
+                style={[
+                  styles.summaryIcon,
+                  {
+                    backgroundColor: theme.colors.secondary + "14",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="basket-outline"
+                  size={20}
+                  color={theme.colors.secondary}
+                />
+              </View>
+
+              <Text
+                variant="bodyMedium"
+                style={[
+                  styles.summaryLabel,
+                  {
+                    color: theme.colors.onSurfaceVariant,
+                  },
+                ]}
+              >
+                Mercadería
+              </Text>
+
+              <Text
+                variant="headlineSmall"
+                style={[
+                  styles.summaryNumber,
+                  {
+                    color: theme.colors.secondary,
+                  },
+                ]}
+              >
+                ${formatearMonto(mercaderiaDelMes)}
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
+
+        <Card
+          mode="contained"
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outline + "55",
+            },
+          ]}
+        >
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionHeader}>
+              <View
+                style={[
+                  styles.sectionIcon,
+                  {
+                    backgroundColor: theme.colors.primary + "14",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="clipboard-text-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <Text
+                variant="titleLarge"
+                style={[
+                  styles.cardTitle,
+                  {
+                    color: theme.colors.onSurface,
+                  },
+                ]}
+              >
+                Datos del cálculo
               </Text>
             </View>
-          ) : (
-            registrosDelMes.map((registro) => {
-              const mercaderiaRegistro = Number(registro.mercaderia) || 0;
 
-              return (
-                <View
-                  key={registro.id}
+            <TextInput
+              label="Valor de mi hora"
+              value={valorHora}
+              onChangeText={setValorHora}
+              keyboardType="numeric"
+              mode="outlined"
+              placeholder="Ej: 2500"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+            />
+
+            <TextInput
+              label="Efectivo a descontar / adelanto"
+              value={adelanto}
+              onChangeText={setAdelanto}
+              keyboardType="numeric"
+              mode="outlined"
+              placeholder="Ej: 20000"
+              style={styles.input}
+              outlineStyle={styles.inputOutline}
+            />
+
+            <View
+              style={[
+                styles.mercaderiaBox,
+                {
+                  backgroundColor: theme.colors.secondary + "10",
+                  borderColor: theme.colors.secondary + "30",
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.mercaderiaIcon,
+                  {
+                    backgroundColor: theme.colors.secondary + "18",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="basket-outline"
+                  size={24}
+                  color={theme.colors.secondary}
+                />
+              </View>
+
+              <View style={styles.mercaderiaText}>
+                <Text
+                  variant="titleSmall"
                   style={[
-                    styles.hourItem,
+                    styles.discountTitle,
                     {
-                      backgroundColor: theme.dark
-                        ? theme.colors.background + "90"
-                        : theme.colors.primary + "07",
-                      borderColor: theme.colors.outline + "45",
+                      color: theme.colors.secondary,
                     },
                   ]}
                 >
-                  <View style={styles.hourItemTop}>
-                    <View
-                      style={[
-                        styles.hourIcon,
-                        {
-                          backgroundColor: theme.colors.primary + "14",
-                        },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name="clock-check"
-                        size={20}
-                        color={theme.colors.primary}
-                      />
-                    </View>
+                  Mercadería tomada desde Horas
+                </Text>
 
-                    <View style={styles.hourItemText}>
-                      <Text
-                        variant="titleSmall"
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.mercaderiaLine,
+                    {
+                      color: theme.colors.onSurfaceVariant,
+                    },
+                  ]}
+                >
+                  Total cargado en el mes: ${formatearMonto(mercaderiaDelMes)}
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.mercaderiaLine,
+                    {
+                      color: theme.colors.onSurfaceVariant,
+                    },
+                  ]}
+                >
+                  Con descuento / 1.2: $
+                  {formatearMonto(mercaderiaConDescuento)}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.resultBox,
+                {
+                  backgroundColor: resultBackground,
+                  borderColor: resultBorder,
+                },
+              ]}
+            >
+              <View style={styles.resultTextBox}>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurface,
+                    fontWeight: "800",
+                  }}
+                >
+                  Total final a cobrar
+                </Text>
+
+                <Text
+                  variant="headlineMedium"
+                  style={[
+                    styles.totalFinal,
+                    {
+                      color: resultColor,
+                    },
+                  ]}
+                >
+                  ${formatearMonto(totalFinal)}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.resultIcon,
+                  {
+                    backgroundColor: resultIconBackground,
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={
+                    totalFinal >= 0 ? "cash-check" : "alert-circle-outline"
+                  }
+                  size={24}
+                  color={resultColor}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.breakdownBox,
+                {
+                  backgroundColor: theme.dark
+                    ? theme.colors.background + "90"
+                    : theme.colors.primary + "07",
+                  borderColor: theme.colors.outline + "45",
+                },
+              ]}
+            >
+              <View style={styles.breakdownRow}>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Horas x valor hora
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.breakdownValue,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  ${formatearMonto(bruto)}
+                </Text>
+              </View>
+
+              <Divider
+                style={[
+                  styles.breakdownDivider,
+                  {
+                    backgroundColor: theme.colors.outline + "30",
+                  },
+                ]}
+              />
+
+              <View style={styles.breakdownRow}>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Adelanto
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.breakdownValue,
+                    {
+                      color: theme.colors.error,
+                    },
+                  ]}
+                >
+                  - ${formatearMonto(adelantoNumber)}
+                </Text>
+              </View>
+
+              <Divider
+                style={[
+                  styles.breakdownDivider,
+                  {
+                    backgroundColor: theme.colors.outline + "30",
+                  },
+                ]}
+              />
+
+              <View style={styles.breakdownRow}>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Mercadería con descuento
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.breakdownValue,
+                    {
+                      color: theme.colors.error,
+                    },
+                  ]}
+                >
+                  - ${formatearMonto(mercaderiaConDescuento)}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.saldadoRow,
+                {
+                  backgroundColor: saldado
+                    ? theme.colors.primary + "10"
+                    : theme.colors.secondary + "10",
+                  borderColor: saldado
+                    ? theme.colors.primary + "25"
+                    : theme.colors.secondary + "25",
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.saldadoIcon,
+                  {
+                    backgroundColor: saldado
+                      ? theme.colors.primary + "18"
+                      : theme.colors.secondary + "18",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={saldado ? "check-circle-outline" : "clock-outline"}
+                  size={22}
+                  color={
+                    saldado ? theme.colors.primary : theme.colors.secondary
+                  }
+                />
+              </View>
+
+              <View style={styles.saldadoText}>
+                <Text
+                  variant="titleMedium"
+                  style={[
+                    styles.saldadoTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Mes saldado
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Marcá esto cuando ya te hayan pagado este mes.
+                </Text>
+              </View>
+
+              <Switch value={saldado} onValueChange={cambiarSaldado} />
+            </View>
+
+            <View style={styles.actions}>
+              <Button
+                mode="outlined"
+                icon="file-pdf-box"
+                onPress={generarPdf}
+                loading={generandoPdf}
+                disabled={generandoPdf}
+                style={[
+                  styles.pdfButton,
+                  {
+                    borderColor: theme.colors.outline + "80",
+                  },
+                ]}
+                labelStyle={styles.buttonLabel}
+                contentStyle={styles.actionButtonContent}
+              >
+                PDF
+              </Button>
+
+              <Button
+                mode="contained"
+                icon="content-save-outline"
+                onPress={guardarCalculo}
+                loading={guardando}
+                disabled={guardando}
+                style={styles.saveButton}
+                labelStyle={styles.buttonLabel}
+                contentStyle={styles.actionButtonContent}
+              >
+                Guardar
+              </Button>
+            </View>
+          </Card.Content>
+        </Card>
+
+        <Card
+          mode="contained"
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.outline + "55",
+            },
+          ]}
+        >
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionHeader}>
+              <View
+                style={[
+                  styles.sectionIcon,
+                  {
+                    backgroundColor: theme.colors.primary + "14",
+                  },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="format-list-bulleted"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </View>
+
+              <View style={styles.sectionTextBox}>
+                <Text
+                  variant="titleLarge"
+                  style={[
+                    styles.cardTitle,
+                    {
+                      color: theme.colors.onSurface,
+                    },
+                  ]}
+                >
+                  Detalle usado
+                </Text>
+
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  Registros cargados en {mesActual?.label} {anioSeleccionado}.
+                </Text>
+              </View>
+            </View>
+
+            {registrosDelMes.length === 0 ? (
+              <View
+                style={[
+                  styles.emptyBox,
+                  {
+                    backgroundColor: theme.dark
+                      ? theme.colors.background + "90"
+                      : theme.colors.primary + "08",
+                    borderColor: theme.colors.outline + "45",
+                  },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.emptyIcon,
+                    {
+                      backgroundColor: theme.colors.primary + "14",
+                    },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                </View>
+
+                <Text
+                  variant="bodyMedium"
+                  style={[
+                    styles.emptyText,
+                    {
+                      color: theme.colors.onSurfaceVariant,
+                    },
+                  ]}
+                >
+                  No hay registros cargados para este mes.
+                </Text>
+              </View>
+            ) : (
+              registrosDelMes.map((registro) => {
+                const mercaderiaRegistro = Number(registro.mercaderia) || 0;
+
+                return (
+                  <View
+                    key={registro.id}
+                    style={[
+                      styles.hourItem,
+                      {
+                        backgroundColor: theme.dark
+                          ? theme.colors.background + "90"
+                          : theme.colors.primary + "07",
+                        borderColor: theme.colors.outline + "45",
+                      },
+                    ]}
+                  >
+                    <View style={styles.hourItemTop}>
+                      <View
                         style={[
-                          styles.hourDate,
+                          styles.hourIcon,
                           {
-                            color: theme.colors.onSurface,
+                            backgroundColor: theme.colors.primary + "14",
                           },
                         ]}
                       >
-                        {registro.diaNombre} · {registro.fecha}
-                      </Text>
+                        <MaterialCommunityIcons
+                          name="clock-check"
+                          size={20}
+                          color={theme.colors.primary}
+                        />
+                      </View>
 
-                      <Text
-                        variant="bodySmall"
-                        style={{
-                          color: theme.colors.onSurfaceVariant,
+                      <View style={styles.hourItemText}>
+                        <Text
+                          variant="titleSmall"
+                          style={[
+                            styles.hourDate,
+                            {
+                              color: theme.colors.onSurface,
+                            },
+                          ]}
+                        >
+                          {registro.diaNombre} · {registro.fecha}
+                        </Text>
+
+                        <Text
+                          variant="bodySmall"
+                          style={{
+                            color: theme.colors.onSurfaceVariant,
+                          }}
+                        >
+                          {registro.observacion || "Sin observación"}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.hourChips}>
+                      <Chip
+                        compact
+                        style={[
+                          styles.hourChip,
+                          {
+                            backgroundColor: theme.colors.primary + "18",
+                            borderColor: theme.colors.primary + "35",
+                          },
+                        ]}
+                        textStyle={{
+                          color: theme.colors.primary,
+                          fontWeight: "900",
                         }}
                       >
-                        {registro.observacion || "Sin observación"}
-                      </Text>
+                        {formatearHoras(registro.horas)} h
+                      </Chip>
+
+                      <Chip
+                        compact
+                        icon="basket-outline"
+                        style={[
+                          styles.hourChip,
+                          {
+                            backgroundColor: theme.colors.secondary + "18",
+                            borderColor: theme.colors.secondary + "35",
+                          },
+                        ]}
+                        textStyle={{
+                          color: theme.colors.secondary,
+                          fontWeight: "900",
+                        }}
+                      >
+                        ${formatearMonto(mercaderiaRegistro)}
+                      </Chip>
                     </View>
                   </View>
-
-                  <View style={styles.hourChips}>
-                    <Chip
-                      compact
-                      style={[
-                        styles.hourChip,
-                        {
-                          backgroundColor: theme.colors.primary + "18",
-                          borderColor: theme.colors.primary + "35",
-                        },
-                      ]}
-                      textStyle={{
-                        color: theme.colors.primary,
-                        fontWeight: "900",
-                      }}
-                    >
-                      {formatearHoras(registro.horas)} h
-                    </Chip>
-
-                    <Chip
-                      compact
-                      icon="basket-outline"
-                      style={[
-                        styles.hourChip,
-                        {
-                          backgroundColor: theme.colors.secondary + "18",
-                          borderColor: theme.colors.secondary + "35",
-                        },
-                      ]}
-                      textStyle={{
-                        color: theme.colors.secondary,
-                        fontWeight: "900",
-                      }}
-                    >
-                      ${formatearMonto(mercaderiaRegistro)}
-                    </Chip>
-                  </View>
-                </View>
-              );
-            })
-          )}
-        </Card.Content>
-      </Card>
-    </ScrollView>
+                );
+              })
+            )}
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 //Estilos:
 const styles = StyleSheet.create({
+  keyboardContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },
   content: {
     padding: 20,
     paddingTop: 50,
-    paddingBottom: 120,
+    paddingBottom: 210,
   },
 
   header: {

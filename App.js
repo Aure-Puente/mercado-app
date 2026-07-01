@@ -1,9 +1,9 @@
 //App:
 import React, { useEffect, useMemo, useState } from "react";
+import { View, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { PaperProvider } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 import AppNavigator from "./src/navigation/AppNavigator";
 import { darkTheme, lightTheme } from "./src/theme/theme";
 
@@ -50,18 +50,50 @@ export default function App() {
   }, [isDarkMode]);
 
   if (!themeLoaded) {
-    return null;
+    return (
+      <View
+        style={[
+          styles.loadingContainer,
+          {
+            backgroundColor: lightTheme.colors.background,
+          },
+        ]}
+      />
+    );
   }
 
   return (
     <PaperProvider theme={theme}>
-      <StatusBar style={isDarkMode ? "light" : "dark"} />
+      <View
+        style={[
+          styles.appContainer,
+          {
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+      >
+        <StatusBar
+          style={isDarkMode ? "light" : "dark"}
+          backgroundColor={theme.colors.background}
+          translucent={false}
+        />
 
-      <AppNavigator
-        theme={theme}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
-      />
+        <AppNavigator
+          theme={theme}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+        />
+      </View>
     </PaperProvider>
   );
 }
+
+//Estilos:
+const styles = StyleSheet.create({
+  appContainer: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+  },
+});
